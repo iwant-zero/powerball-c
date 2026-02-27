@@ -34,4 +34,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore(data): update powerball draws/freq"
-          file_pattern: "data/powerball_draws.json data/powerball_freq.json"
+          file_pattern: "data/powerball_draws.json data/powerball_freq.json powerball-c/data/powerball_draws.json powerball-c/data/powerball_freq.json"
