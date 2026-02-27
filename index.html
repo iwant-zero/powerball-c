@@ -39,6 +39,8 @@
     .btn.primary{background:rgba(121,168,255,.18);border-color:rgba(121,168,255,.35)}
     .btn.good{background:rgba(125,255,178,.12);border-color:rgba(125,255,178,.35)}
     .btn.warn{background:rgba(255,211,125,.12);border-color:rgba(255,211,125,.35)}
+    .btn.tiny{padding:8px 10px;font-size:12px;border-radius:10px}
+    .btn.toggle.on{background:rgba(125,255,178,.12);border-color:rgba(125,255,178,.35)}
     .small{font-size:12px;color:var(--muted)}
     .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
     @media (min-width:860px){ .grid{grid-template-columns:1.05fr .95fr} }
@@ -84,7 +86,7 @@
           ✅ “최근 1/7/30일” 가중 탭 + “시드 입력/공유” + “cycle 점프(+100/+1000)” + <b>숫자선택/숫자합</b> 전부 지원.
         </p>
 
-        <!-- ✅ 상단 빈 공간 활용: 상태/팁/히스토리 -->
+        <!-- ✅ 상단 활용: 상태/팁/히스토리 -->
         <div class="card" style="margin-top:12px">
           <div style="font-weight:900">📌 현재 상태 / 사용 팁</div>
           <div class="small" id="statusLine" style="margin-top:6px">—</div>
@@ -141,6 +143,12 @@
           </div>
           <button class="btn warn" id="jump100">+100</button>
           <button class="btn warn" id="jump1000">+1000</button>
+        </div>
+
+        <!-- ✅ 중복 자동 회피 토글 -->
+        <div class="row" style="margin-top:10px;align-items:center;justify-content:space-between">
+          <button class="btn toggle" id="avoidDupToggle">중복 자동 회피(+37): OFF</button>
+          <div class="small">중복이면 cycle을 +37 점프 후 즉시 재생성</div>
         </div>
 
         <div class="row" style="margin-top:10px">
@@ -357,6 +365,25 @@ function currentWindow(){
 }
 
 // ---------------------------
+// ✅ 중복 자동 회피 토글(+37)
+// ---------------------------
+const AVOID_KEY = "pb_avoiddup_v1";
+function isAvoidDup(){
+  return localStorage.getItem(AVOID_KEY) === "1";
+}
+function setAvoidDup(v){
+  localStorage.setItem(AVOID_KEY, v ? "1" : "0");
+  refreshAvoidUI();
+}
+function refreshAvoidUI(){
+  const on = isAvoidDup();
+  const b = $("avoidDupToggle");
+  b.textContent = `중복 자동 회피(+37): ${on ? "ON" : "OFF"}`;
+  b.classList.toggle("on", on);
+  b.classList.toggle("toggle", true);
+}
+
+// ---------------------------
 // FREQ 게터(구버전 호환)
 // ---------------------------
 function getAllSelectNormal(){
@@ -485,6 +512,16 @@ function renderSetsSelect(sets){
     out.appendChild(row);
   });
 }
+
+async function copyTextSafe(text){
+  try{ await navigator.clipboard.writeText(text); }catch{}
+}
+
+/**
+ * ✅ 숫자합 게임: “룰 선택 + PB구간”을 한 세트로 고정(베팅 흐름 그대로)
+ * - 한 줄에 '베팅 세트' 형태로 표시
+ * - 각 세트에 '복사' 버튼 제공
+ */
 function renderSetsSum(sets){
   out.innerHTML = "";
   sets.forEach((s, i)=>{
@@ -495,6 +532,7 @@ function renderSetsSum(sets){
     left.style.display="flex";
     left.style.alignItems="center";
     left.style.gap="10px";
+    left.style.flexWrap="wrap";
 
     const idx = document.createElement("div");
     idx.className="idx mono";
@@ -504,23 +542,40 @@ function renderSetsSum(sets){
     tagRule.className = "tag rule";
     tagRule.textContent = `룰: ${SUM_RULE}`;
 
-    const tagSum = document.createElement("span");
-    tagSum.className = "tag sum";
     const sumLabel = (SUM_RULE==="oddeven")
       ? (SUM_LABEL.oddeven[s.sumPick] || s.sumPick)
       : (SUM_LABEL[SUM_RULE][s.sumPick] || s.sumPick);
-    tagSum.textContent = `합: ${sumLabel}`;
 
-    const tagPb = document.createElement("span");
-    tagPb.className = "tag pb";
-    tagPb.textContent = `PB구간: ${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+    const tagSet = document.createElement("span");
+    tagSet.className = "tag sum";
+    tagSet.textContent = `베팅 세트: 합 ${sumLabel} + PB ${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "btn tiny";
+    copyBtn.textContent = "복사";
+    copyBtn.addEventListener("click", ()=>{
+      const text = `숫자합게임|룰=${SUM_RULE}|합=${sumLabel}|PB구간=${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+      copyTextSafe(text);
+    });
+
+    const right = document.createElement("div");
+    right.style.display="flex";
+    right.style.alignItems="center";
+    right.style.gap="8px";
+
+    const pbTag = document.createElement("span");
+    pbTag.className = "tag pb";
+    pbTag.textContent = `PB구간: ${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+
+    right.appendChild(pbTag);
+    right.appendChild(copyBtn);
 
     left.appendChild(idx);
     left.appendChild(tagRule);
-    left.appendChild(tagSum);
+    left.appendChild(tagSet);
 
     row.appendChild(left);
-    row.appendChild(tagPb);
+    row.appendChild(right);
     out.appendChild(row);
   });
 }
@@ -530,7 +585,6 @@ function renderSetsSum(sets){
 // ---------------------------
 function renderHot(){
   if(!FREQ){ return; }
-  const alpha = alphaForMode();
   const win = currentWindow();
   const range = win ? `${win.fromYmd}~${win.toYmd}` : "-";
   hotMeta.textContent = `game=${GAME}${GAME==="sum" ? `(${SUM_RULE})` : ""} · mode=${MODE} · recent=${range}`;
@@ -538,6 +592,7 @@ function renderHot(){
   hotArea.innerHTML = "";
 
   if(GAME === "select"){
+    const alpha = alphaForMode();
     const allTotal = FREQ.allTime.totalDraws || 0;
     const allNormal = getAllSelectNormal();
     const allPower  = getAllSelectPower();
@@ -585,6 +640,7 @@ function renderHot(){
   }
 
   // GAME === "sum"
+  const alpha = alphaForMode();
   const allTotal = FREQ.allTime.totalDraws || 0;
   const allSum = getAllSum();
   const winTotal = win?.totalDraws || 0;
@@ -638,7 +694,7 @@ function renderHot(){
 // ---------------------------
 // 히스토리(최근 20)
 // ---------------------------
-const HIST_KEY = "pb_history_v2";
+const HIST_KEY = "pb_history_v3";
 function loadHist(){
   try{ return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }catch{ return []; }
 }
@@ -648,11 +704,11 @@ function saveHist(arr){
 function fmtSetSelect(s){
   return `${s.balls.join("-")} + PB${s.powerball}`;
 }
-function fmtSetSum(s){
-  const sumLabel = (SUM_RULE==="oddeven")
-    ? (SUM_LABEL.oddeven[s.sumPick] || s.sumPick)
-    : (SUM_LABEL[SUM_RULE][s.sumPick] || s.sumPick);
-  return `합:${sumLabel} + PB구간:${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+function fmtSetSum(rule, sumPick, powerBand){
+  const sumLabel = (rule==="oddeven")
+    ? (SUM_LABEL.oddeven[sumPick] || sumPick)
+    : (SUM_LABEL[rule][sumPick] || sumPick);
+  return `합:${sumLabel} + PB:${PB_BAND_LABEL[powerBand] || powerBand}`;
 }
 function renderHistory(){
   const box = $("historyBox");
@@ -677,11 +733,12 @@ function updateStatusLine(){
   const win = currentWindow();
   const range = win ? `${win.fromYmd}~${win.toYmd}` : "-";
   const alpha = alphaForMode();
+  const avoid = isAvoidDup() ? "ON(+37)" : "OFF";
 
   $("statusLine").innerHTML =
     `game=<b>${GAME}</b>${GAME==="sum" ? ` (rule=<b>${SUM_RULE}</b>)` : ""} · mode=<b>${MODE}</b> (alpha ${alpha})<br/>` +
     `recent=<span class="mono">${range}</span> · seed=<span class="mono">${seedStr}</span><br/>` +
-    `cycle=<span class="mono">${cycle}</span> · lastRound=<span class="mono">${FREQ.allTime.lastRound}</span>`;
+    `cycle=<span class="mono">${cycle}</span> · avoidDup=<b>${avoid}</b> · lastRound=<span class="mono">${FREQ.allTime.lastRound}</span>`;
 }
 
 // ---------------------------
@@ -689,20 +746,14 @@ function updateStatusLine(){
 // ---------------------------
 function buildCandidateUrls(relPath){
   const uniq = new Set();
-
-  // 1) 현재 페이지 기준 상대경로
   uniq.add(new URL(relPath, window.location.href).toString());
 
-  // 2) repo base 추정
   const parts = window.location.pathname.split("/").filter(Boolean);
   const repo = parts[0] || "";
   const repoBase = window.location.origin + "/" + repo + "/";
 
-  // 3) /data 와 /powerball-c/data 둘 다 시도
   uniq.add(repoBase + "data/" + relPath.replace(/^(\.\.\/)+/,"").replace(/^data\//,""));
   uniq.add(repoBase + "powerball-c/data/" + relPath.replace(/^(\.\.\/)+/,"").replace(/^data\//,""));
-
-  // 4) 같은 폴더 아래 data
   uniq.add(new URL("./data/" + relPath.split("/").pop(), window.location.href).toString());
 
   return Array.from(uniq);
@@ -734,6 +785,7 @@ async function loadData(){
     meta.innerHTML = `✅ loaded: <span class="mono">${okUrl}</span><br/>data updatedAt: <span class="mono">${FREQ.updatedAt}</span> · lastRound: <span class="mono">${FREQ.allTime.lastRound}</span>`;
     renderHot();
     renderHistory();
+    refreshAvoidUI();
     updateStatusLine();
     return;
   }
@@ -744,41 +796,101 @@ async function loadData(){
 }
 
 // ---------------------------
+// ✅ 중복 자동 회피 로직 (+37 점프 후 재생성)
+// - 결정론 유지: 중복이면 cycle을 +37만큼 이동하고 다시 생성
+// - 안전장치: 세트 하나당 최대 30회 시도
+// ---------------------------
+function makeKeySelect(set){
+  return `select|${MODE}|${set.balls.join(",")}|${set.powerball}`;
+}
+function makeKeySum(set){
+  return `sum|${SUM_RULE}|${MODE}|${set.sumPick}|${set.powerBand}`;
+}
+function collectExistingKeys(){
+  const hist = loadHist();
+  const keys = new Set(hist.map(h=>h.key));
+  return keys;
+}
+
+// ---------------------------
 // 추천 실행
 // ---------------------------
 function doRecommend(n){
   if(!FREQ){ return; }
   saveSeed();
   const seedStr = $("seed").value.trim() || deviceSeedDefault();
-  const baseCycle = Number(localStorage.getItem("pb_cycle") || "0");
+
+  // baseCycle은 "현재 저장된 cycle"에서 시작
+  let baseCycle = Number(localStorage.getItem("pb_cycle") || "0");
+
+  const avoid = isAvoidDup();
+  const existing = collectExistingKeys(); // 과거 히스토리 기준 중복 체크
+  const batchKeys = new Set();            // 이번 클릭 배치 내 중복 체크
 
   const sets = [];
+
   for(let i=0;i<n;i++){
-    const c = baseCycle + (i*9973);
-    if(GAME === "select"){
-      sets.push(recommendSelect(seedStr, c, 17+i));
-    }else{
-      sets.push(recommendSum(seedStr, c, 71+i, SUM_RULE));
+    // 원래 분산 cycle(소수)
+    let cycleForSet = baseCycle + (i*9973);
+    let tries = 0;
+
+    while(true){
+      let set;
+      if(GAME === "select"){
+        set = recommendSelect(seedStr, cycleForSet, 17+i);
+      }else{
+        set = recommendSum(seedStr, cycleForSet, 71+i, SUM_RULE);
+      }
+
+      const key = (GAME==="select") ? makeKeySelect(set) : makeKeySum(set);
+
+      // 중복 회피 OFF면 바로 채택
+      if(!avoid){
+        sets.push(set);
+        batchKeys.add(key);
+        break;
+      }
+
+      // 중복이면 cycle +37 점프 후 재시도
+      const dup = existing.has(key) || batchKeys.has(key);
+      if(!dup){
+        sets.push(set);
+        batchKeys.add(key);
+        break;
+      }
+
+      tries++;
+      if(tries >= 30){
+        // 안전장치: 너무 많이 겹치면 그냥 넣고 종료(무한루프 방지)
+        sets.push(set);
+        batchKeys.add(key);
+        break;
+      }
+
+      // ✅ cycle +37 점프(요구사항)
+      baseCycle += 37;
+      setCycle(baseCycle);                 // 화면/저장 값도 함께 점프(사용자가 체감 가능)
+      cycleForSet += 37;                   // 현재 세트도 같은 폭으로 이동
     }
   }
 
-  // ✅ cycle 1 증가
+  // ✅ 클릭 1번당 cycle 1 증가(기본 동작 유지)
   incCycle(1);
 
   // ✅ 렌더
   if(GAME === "select") renderSetsSelect(sets);
   else renderSetsSum(sets);
 
-  // ✅ 히스토리 저장
+  // ✅ 히스토리 저장(세트 고정 표기)
   const hist = loadHist();
   for(const s of sets){
     let key, text;
     if(GAME === "select"){
-      key = `select|${MODE}|${s.balls.join(",")}|${s.powerball}`;
+      key = makeKeySelect(s);
       text = `[선택/${MODE}] ${fmtSetSelect(s)}`;
     }else{
-      key = `sum|${SUM_RULE}|${MODE}|${s.sumPick}|${s.powerBand}`;
-      text = `[합:${SUM_RULE}/${MODE}] ${fmtSetSum(s)}`;
+      key = makeKeySum(s);
+      text = `[합:${SUM_RULE}/${MODE}] ${fmtSetSum(SUM_RULE, s.sumPick, s.powerBand)}`;
     }
     hist.unshift({ key, text });
   }
@@ -830,6 +942,11 @@ $("btn10").addEventListener("click", ()=>doRecommend(10));
 $("jump100").addEventListener("click", ()=>{ incCycle(100); updateStatusLine(); });
 $("jump1000").addEventListener("click", ()=>{ incCycle(1000); updateStatusLine(); });
 
+$("avoidDupToggle").addEventListener("click", ()=>{
+  setAvoidDup(!isAvoidDup());
+  updateStatusLine();
+});
+
 $("copySeed").addEventListener("click", async ()=>{
   const v = $("seed").value.trim();
   try{ await navigator.clipboard.writeText(v); }catch{}
@@ -844,6 +961,9 @@ $("clearHistory").addEventListener("click", ()=>{
 });
 
 loadLocal();
+// 기본값: ON으로 두고 싶으면 아래 한 줄을 주석 해제
+// if(localStorage.getItem(AVOID_KEY) === null) setAvoidDup(true);
+refreshAvoidUI();
 loadData();
 </script>
 </body>
