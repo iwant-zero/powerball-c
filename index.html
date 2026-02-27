@@ -58,10 +58,20 @@
     .set .idx{width:22px;color:var(--muted);font-weight:800}
     .sep{height:1px;background:var(--line);margin:12px 0}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
     .hotlist{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
     .hotitem{padding:8px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);text-align:center}
     .hotitem b{display:block;font-size:14px}
     .hotitem span{display:block;font-size:11px;color:var(--muted)}
+
+    .tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);color:var(--txt);font-weight:800
+    }
+    .tag.pb{border-color:rgba(255,110,168,.45);background:rgba(255,110,168,.14)}
+    .tag.sum{border-color:rgba(125,255,178,.35);background:rgba(125,255,178,.12)}
+    .tag.rule{border-color:rgba(121,168,255,.35);background:rgba(121,168,255,.12)}
   </style>
 </head>
 <body>
@@ -71,8 +81,28 @@
         <h1>POWER BALL (동행복권) — 빈도 기반 추천기</h1>
         <p>
           ✅ <b>무작위(Math.random/crypto)</b> 없음. <b>데이터 + 시드 + 사이클</b>로만 돌아가는 결정론 추천.<br/>
-          ✅ “최근 1/7/30일” 가중 탭 + “시드 입력/공유” + “cycle 점프(+100/+1000)” 포함.
+          ✅ “최근 1/7/30일” 가중 탭 + “시드 입력/공유” + “cycle 점프(+100/+1000)” + <b>숫자선택/숫자합</b> 전부 지원.
         </p>
+
+        <!-- ✅ 상단 빈 공간 활용: 상태/팁/히스토리 -->
+        <div class="card" style="margin-top:12px">
+          <div style="font-weight:900">📌 현재 상태 / 사용 팁</div>
+          <div class="small" id="statusLine" style="margin-top:6px">—</div>
+          <div class="sep"></div>
+
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div class="small">
+              팀/지인끼리 겹침 줄이기:
+              <span class="mono">seed</span>를 서로 다르게(닉네임/TEAM-A…),
+              필요하면 <span class="mono">+100 / +1000</span> 점프 후 추천.
+            </div>
+            <button class="btn" id="clearHistory">히스토리 초기화</button>
+          </div>
+
+          <div class="sep"></div>
+          <div style="font-weight:900;margin-bottom:6px">최근 추천(최대 20)</div>
+          <div id="historyBox" class="small" style="line-height:1.5;color:var(--muted)">—</div>
+        </div>
       </div>
 
       <div class="card" style="min-width:320px;flex:1">
@@ -136,18 +166,34 @@
 
         <div class="sep"></div>
 
+        <!-- ✅ 게임 선택 -->
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <div class="pillbar">
+            <button class="pill on" data-game="select">숫자선택 게임</button>
+            <button class="pill" data-game="sum">숫자합 게임</button>
+          </div>
+
+          <!-- ✅ 숫자합 룰 선택 -->
+          <div class="pillbar" id="sumRuleBar" style="display:none">
+            <button class="pill on" data-sumrule="size">대/중/소</button>
+            <button class="pill" data-sumrule="band">A~F 구간</button>
+            <button class="pill" data-sumrule="oddeven">합 홀/짝</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
         <div id="out"></div>
       </div>
 
       <div class="card">
-        <div style="font-weight:900">핫 넘버(상위 빈도)</div>
-        <div class="small" id="hotMeta" style="margin-top:4px">—</div>
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <div style="font-weight:900">핫 트렌드(빈도/가중)</div>
+          <div class="small" id="hotMeta">—</div>
+        </div>
         <div class="sep"></div>
-        <div style="font-weight:900;margin-bottom:6px">일반볼 Top 14</div>
-        <div class="hotlist" id="hotNormal"></div>
-        <div class="sep"></div>
-        <div style="font-weight:900;margin-bottom:6px">파워볼 Top 10</div>
-        <div class="hotlist" id="hotPower" style="grid-template-columns:repeat(5,1fr)"></div>
+
+        <div id="hotArea"></div>
       </div>
     </div>
 
@@ -198,20 +244,28 @@ function scoreList(allCounts, allTotal, winCounts, winTotal, alpha){
     const pAll = allTotal>0 ? cAll/allTotal : 0;
     const pWin = winTotal>0 ? cWin/winTotal : 0;
     const s = (1-alpha)*pAll + alpha*pWin;
-    out.push({n:Number(key), s});
+    out.push({k:key, s});
   }
-  out.sort((a,b)=> (b.s-a.s) || (a.n-b.n));
+  out.sort((a,b)=> (b.s-a.s) || String(a.k).localeCompare(String(b.k)));
   return out;
 }
-function bandSplit(sortedNums){
-  const n = sortedNums.length;
+function bandSplitGeneric(sortedKeys){
+  const n = sortedKeys.length;
   const topN = Math.max(1, Math.floor(n*0.35));
   const lowN = Math.max(1, Math.floor(n*0.25));
   return {
-    top: sortedNums.slice(0, topN),
-    mid: sortedNums.slice(topN, n-lowN),
-    low: sortedNums.slice(n-lowN)
+    top: sortedKeys.slice(0, topN),
+    mid: sortedKeys.slice(topN, Math.max(topN, n-lowN)),
+    low: sortedKeys.slice(Math.max(topN, n-lowN))
   };
+}
+function pickOneFromBands(bands, nextU64){
+  const gate = Number(nextU64() % 100n);
+  const pool =
+    gate < 55 ? bands.top :
+    gate < 85 ? (bands.mid.length ? bands.mid : bands.top) :
+                (bands.low.length ? bands.low : bands.top);
+  return pool[Number(nextU64() % BigInt(pool.length))];
 }
 function ballClass(n){
   if(n<=7) return "r1";
@@ -224,10 +278,45 @@ const $ = (id)=>document.getElementById(id);
 const out = $("out");
 const meta = $("meta");
 const hotMeta = $("hotMeta");
+const hotArea = $("hotArea");
 
 let FREQ = null;
 let MODE = "1d";
+let GAME = "select";      // "select" | "sum"
+let SUM_RULE = "size";    // "size" | "band" | "oddeven"
 
+// ---------------------------
+// 숫자합 라벨
+// ---------------------------
+const SUM_LABEL = {
+  size: {
+    S: "소(15~64)",
+    M: "중(65~80)",
+    L: "대(81~130)"
+  },
+  band: {
+    A: "A(15~35)",
+    B: "B(36~49)",
+    C: "C(50~57)",
+    D: "D(58~65)",
+    E: "E(66~78)",
+    F: "F(79~130)"
+  },
+  oddeven: {
+    ODD: "홀",
+    EVEN: "짝"
+  }
+};
+const PB_BAND_LABEL = {
+  A: "A(0~2)",
+  B: "B(3~4)",
+  C: "C(5~6)",
+  D: "D(7~9)"
+};
+
+// ---------------------------
+// 로컬 seed/cycle
+// ---------------------------
 function deviceSeedDefault(){
   const fp = [
     navigator.userAgent,
@@ -238,7 +327,6 @@ function deviceSeedDefault(){
   const h = fnv1a64(fp);
   return "PB-" + h.toString(16);
 }
-
 function loadLocal(){
   const seed = localStorage.getItem("pb_seed") || deviceSeedDefault();
   const cycle = Number(localStorage.getItem("pb_cycle") || "0");
@@ -258,32 +346,59 @@ function incCycle(delta){
   const cur = Number(localStorage.getItem("pb_cycle") || "0");
   setCycle(cur + delta);
 }
-
+function alphaForMode(){
+  return MODE==="1d" ? 0.65 : MODE==="7d" ? 0.45 : 0.25;
+}
 function currentWindow(){
   if(!FREQ) return null;
   if(MODE==="1d") return FREQ.recent?.d1;
   if(MODE==="7d") return FREQ.recent?.d7;
   return FREQ.recent?.d30;
 }
-function alphaForMode(){
-  return MODE==="1d" ? 0.65 : MODE==="7d" ? 0.45 : 0.25;
+
+// ---------------------------
+// FREQ 게터(구버전 호환)
+// ---------------------------
+function getAllSelectNormal(){
+  return (FREQ.allTime?.select?.normal) || FREQ.allTime?.normal || {};
+}
+function getAllSelectPower(){
+  return (FREQ.allTime?.select?.power) || FREQ.allTime?.power || {};
+}
+function getAllSum(){
+  return FREQ.allTime?.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} };
+}
+function getWinSelect(){
+  const w = currentWindow() || {};
+  return w.select || { normal:{}, power:{} };
+}
+function getWinSum(){
+  const w = currentWindow() || {};
+  return w.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} };
 }
 
-function recommendOne(seedStr, cycle, salt){
+// ---------------------------
+// 추천: 숫자선택
+// ---------------------------
+function recommendSelect(seedStr, cycle, salt){
   const alpha = alphaForMode();
-  const win = currentWindow() || {totalDraws:0, normal:{}, power:{}};
+  const win = currentWindow() || {totalDraws:0, select:{normal:{}, power:{}}};
 
   const allTotal = FREQ.allTime?.totalDraws || 0;
-  const allNormal = FREQ.allTime?.normal || {};
-  const allPower = FREQ.allTime?.power || {};
+  const allNormal = getAllSelectNormal();
+  const allPower = getAllSelectPower();
 
-  const ns = scoreList(allNormal, allTotal, win.normal, win.totalDraws, alpha);
-  const ps = scoreList(allPower, allTotal, win.power, win.totalDraws, alpha);
+  const winTotal = win.totalDraws || 0;
+  const winNormal = getWinSelect().normal || {};
+  const winPower  = getWinSelect().power  || {};
 
-  const normalBand = bandSplit(ns.map(x=>x.n));
-  const powerBand = bandSplit(ps.map(x=>x.n));
+  const ns = scoreList(allNormal, allTotal, winNormal, winTotal, alpha);
+  const ps = scoreList(allPower, allTotal, winPower, winTotal, alpha);
 
-  const seedKey = `${seedStr}|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
+  const normalBand = bandSplitGeneric(ns.map(x=>Number(x.k)));
+  const powerBand  = bandSplitGeneric(ps.map(x=>Number(x.k)));
+
+  const seedKey = `${seedStr}|select|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
   const base = fnv1a64(seedKey);
   const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
 
@@ -304,11 +419,43 @@ function recommendOne(seedStr, cycle, salt){
   return {balls, powerball};
 }
 
-function renderSets(sets){
+// ---------------------------
+// 추천: 숫자합 (룰 + 파워볼 구간)
+// ---------------------------
+function recommendSum(seedStr, cycle, salt, rule){
+  const alpha = alphaForMode();
+  const win = currentWindow() || {totalDraws:0, sum:{size:{}, band:{}, oddEven:{}, powerBand:{}}};
+
+  const allTotal = FREQ.allTime?.totalDraws || 0;
+  const allSum = getAllSum();
+  const winSum = getWinSum();
+  const winTotal = win.totalDraws || 0;
+
+  const sumScores = scoreList(allSum[rule], allTotal, winSum[rule], winTotal, alpha);
+  const pbScores  = scoreList(allSum.powerBand, allTotal, winSum.powerBand, winTotal, alpha);
+
+  const sumBands = bandSplitGeneric(sumScores.map(x=>x.k));
+  const pbBands  = bandSplitGeneric(pbScores.map(x=>x.k));
+
+  const seedKey = `${seedStr}|sum|${rule}|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
+  const base = fnv1a64(seedKey);
+  const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
+
+  const sumPick = pickOneFromBands(sumBands, next);
+  const pbPick  = pickOneFromBands(pbBands, next);
+
+  return {rule, sumPick, powerBand: pbPick};
+}
+
+// ---------------------------
+// 렌더: 추천 결과
+// ---------------------------
+function renderSetsSelect(sets){
   out.innerHTML = "";
   sets.forEach((s, i)=>{
     const row = document.createElement("div");
     row.className = "set";
+
     const left = document.createElement("div");
     left.style.display="flex";
     left.style.alignItems="center";
@@ -333,64 +480,233 @@ function renderSets(sets){
 
     left.appendChild(idx);
     left.appendChild(balls);
-
     row.appendChild(left);
     row.appendChild(pb);
     out.appendChild(row);
   });
 }
+function renderSetsSum(sets){
+  out.innerHTML = "";
+  sets.forEach((s, i)=>{
+    const row = document.createElement("div");
+    row.className = "set";
 
-function renderHot(){
-  const alpha = alphaForMode();
-  const win = currentWindow() || {totalDraws:0, normal:{}, power:{}};
+    const left = document.createElement("div");
+    left.style.display="flex";
+    left.style.alignItems="center";
+    left.style.gap="10px";
 
-  const ns = scoreList(FREQ.allTime.normal, FREQ.allTime.totalDraws, win.normal, win.totalDraws, alpha);
-  const ps = scoreList(FREQ.allTime.power, FREQ.allTime.totalDraws, win.power, win.totalDraws, alpha);
+    const idx = document.createElement("div");
+    idx.className="idx mono";
+    idx.textContent = String(i+1);
 
-  hotMeta.textContent = `mode=${MODE} · recent=${win.fromYmd}~${win.toYmd} · allTimeDraws=${FREQ.allTime.totalDraws}`;
+    const tagRule = document.createElement("span");
+    tagRule.className = "tag rule";
+    tagRule.textContent = `룰: ${SUM_RULE}`;
 
-  const hn = $("hotNormal");
-  hn.innerHTML = "";
-  ns.slice(0,14).forEach(x=>{
-    const d = document.createElement("div");
-    d.className="hotitem";
-    d.innerHTML = `<b>${x.n}</b><span>score ${x.s.toFixed(4)}</span>`;
-    hn.appendChild(d);
-  });
+    const tagSum = document.createElement("span");
+    tagSum.className = "tag sum";
+    const sumLabel = (SUM_RULE==="oddeven")
+      ? (SUM_LABEL.oddeven[s.sumPick] || s.sumPick)
+      : (SUM_LABEL[SUM_RULE][s.sumPick] || s.sumPick);
+    tagSum.textContent = `합: ${sumLabel}`;
 
-  const hp = $("hotPower");
-  hp.innerHTML = "";
-  ps.slice(0,10).forEach(x=>{
-    const d = document.createElement("div");
-    d.className="hotitem";
-    d.innerHTML = `<b>${x.n}</b><span>score ${x.s.toFixed(4)}</span>`;
-    hp.appendChild(d);
+    const tagPb = document.createElement("span");
+    tagPb.className = "tag pb";
+    tagPb.textContent = `PB구간: ${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+
+    left.appendChild(idx);
+    left.appendChild(tagRule);
+    left.appendChild(tagSum);
+
+    row.appendChild(left);
+    row.appendChild(tagPb);
+    out.appendChild(row);
   });
 }
 
-/** ✅ 여기만 “확실하게” 고침: GitHub Pages 구조가 달라도 자동 탐색 */
+// ---------------------------
+// 렌더: 핫(빈도/가중)
+// ---------------------------
+function renderHot(){
+  if(!FREQ){ return; }
+  const alpha = alphaForMode();
+  const win = currentWindow();
+  const range = win ? `${win.fromYmd}~${win.toYmd}` : "-";
+  hotMeta.textContent = `game=${GAME}${GAME==="sum" ? `(${SUM_RULE})` : ""} · mode=${MODE} · recent=${range}`;
+
+  hotArea.innerHTML = "";
+
+  if(GAME === "select"){
+    const allTotal = FREQ.allTime.totalDraws || 0;
+    const allNormal = getAllSelectNormal();
+    const allPower  = getAllSelectPower();
+    const winTotal  = win?.totalDraws || 0;
+    const wsel = getWinSelect();
+
+    const ns = scoreList(allNormal, allTotal, wsel.normal, winTotal, alpha);
+    const ps = scoreList(allPower,  allTotal, wsel.power,  winTotal, alpha);
+
+    const title1 = document.createElement("div");
+    title1.style.fontWeight="900";
+    title1.textContent="일반볼 Top 14";
+    hotArea.appendChild(title1);
+
+    const hn = document.createElement("div");
+    hn.className="hotlist";
+    ns.slice(0,14).forEach(x=>{
+      const d = document.createElement("div");
+      d.className="hotitem";
+      d.innerHTML = `<b>${x.k}</b><span>score ${x.s.toFixed(4)}</span>`;
+      hn.appendChild(d);
+    });
+    hotArea.appendChild(hn);
+
+    const sep = document.createElement("div");
+    sep.className="sep";
+    hotArea.appendChild(sep);
+
+    const title2 = document.createElement("div");
+    title2.style.fontWeight="900";
+    title2.textContent="파워볼(숫자) Top 10";
+    hotArea.appendChild(title2);
+
+    const hp = document.createElement("div");
+    hp.className="hotlist";
+    hp.style.gridTemplateColumns="repeat(5,1fr)";
+    ps.slice(0,10).forEach(x=>{
+      const d = document.createElement("div");
+      d.className="hotitem";
+      d.innerHTML = `<b>${x.k}</b><span>score ${x.s.toFixed(4)}</span>`;
+      hp.appendChild(d);
+    });
+    hotArea.appendChild(hp);
+    return;
+  }
+
+  // GAME === "sum"
+  const allTotal = FREQ.allTime.totalDraws || 0;
+  const allSum = getAllSum();
+  const winTotal = win?.totalDraws || 0;
+  const wsum = getWinSum();
+
+  const ss = scoreList(allSum[SUM_RULE], allTotal, wsum[SUM_RULE], winTotal, alpha);
+  const pb = scoreList(allSum.powerBand, allTotal, wsum.powerBand, winTotal, alpha);
+
+  const title1 = document.createElement("div");
+  title1.style.fontWeight="900";
+  title1.textContent = `일반볼 합 (${SUM_RULE})`;
+  hotArea.appendChild(title1);
+
+  const hs = document.createElement("div");
+  hs.className="hotlist";
+  hs.style.gridTemplateColumns="repeat(3,1fr)";
+  ss.slice(0, 6).forEach(x=>{
+    const d = document.createElement("div");
+    d.className="hotitem";
+    let label = x.k;
+    if(SUM_RULE==="size") label = SUM_LABEL.size[x.k] || x.k;
+    else if(SUM_RULE==="band") label = SUM_LABEL.band[x.k] || x.k;
+    else label = SUM_LABEL.oddeven[x.k] || x.k;
+    d.innerHTML = `<b>${label}</b><span>score ${x.s.toFixed(4)}</span>`;
+    hs.appendChild(d);
+  });
+  hotArea.appendChild(hs);
+
+  const sep = document.createElement("div");
+  sep.className="sep";
+  hotArea.appendChild(sep);
+
+  const title2 = document.createElement("div");
+  title2.style.fontWeight="900";
+  title2.textContent = "파워볼 구간(A~D)";
+  hotArea.appendChild(title2);
+
+  const hp = document.createElement("div");
+  hp.className="hotlist";
+  hp.style.gridTemplateColumns="repeat(4,1fr)";
+  pb.slice(0, 4).forEach(x=>{
+    const d = document.createElement("div");
+    d.className="hotitem";
+    const label = PB_BAND_LABEL[x.k] || x.k;
+    d.innerHTML = `<b>${label}</b><span>score ${x.s.toFixed(4)}</span>`;
+    hp.appendChild(d);
+  });
+  hotArea.appendChild(hp);
+}
+
+// ---------------------------
+// 히스토리(최근 20)
+// ---------------------------
+const HIST_KEY = "pb_history_v2";
+function loadHist(){
+  try{ return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }catch{ return []; }
+}
+function saveHist(arr){
+  localStorage.setItem(HIST_KEY, JSON.stringify(arr.slice(0,20)));
+}
+function fmtSetSelect(s){
+  return `${s.balls.join("-")} + PB${s.powerball}`;
+}
+function fmtSetSum(s){
+  const sumLabel = (SUM_RULE==="oddeven")
+    ? (SUM_LABEL.oddeven[s.sumPick] || s.sumPick)
+    : (SUM_LABEL[SUM_RULE][s.sumPick] || s.sumPick);
+  return `합:${sumLabel} + PB구간:${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+}
+function renderHistory(){
+  const box = $("historyBox");
+  const hist = loadHist();
+  if(!hist.length){ box.textContent = "아직 추천 기록이 없어요."; return; }
+
+  const seen = new Set();
+  let dup = 0;
+  for(const h of hist){
+    if(seen.has(h.key)) dup++;
+    seen.add(h.key);
+  }
+  const dupRate = Math.round((dup / hist.length) * 100);
+
+  const lines = hist.map((h,i)=>`#${hist.length-i}  ${h.text}`).join("<br/>");
+  box.innerHTML = `${lines}<br/><br/>중복률(최근 ${hist.length}): <b style="color:var(--warn)">${dupRate}%</b>`;
+}
+function updateStatusLine(){
+  if(!FREQ) return;
+  const seedStr = $("seed").value.trim() || deviceSeedDefault();
+  const cycle = Number(localStorage.getItem("pb_cycle") || "0");
+  const win = currentWindow();
+  const range = win ? `${win.fromYmd}~${win.toYmd}` : "-";
+  const alpha = alphaForMode();
+
+  $("statusLine").innerHTML =
+    `game=<b>${GAME}</b>${GAME==="sum" ? ` (rule=<b>${SUM_RULE}</b>)` : ""} · mode=<b>${MODE}</b> (alpha ${alpha})<br/>` +
+    `recent=<span class="mono">${range}</span> · seed=<span class="mono">${seedStr}</span><br/>` +
+    `cycle=<span class="mono">${cycle}</span> · lastRound=<span class="mono">${FREQ.allTime.lastRound}</span>`;
+}
+
+// ---------------------------
+// 데이터 로딩(경로 자동 탐색)
+// ---------------------------
 function buildCandidateUrls(relPath){
   const uniq = new Set();
 
-  // 1) 현재 페이지 기준 상대경로(가장 우선)
+  // 1) 현재 페이지 기준 상대경로
   uniq.add(new URL(relPath, window.location.href).toString());
 
-  // 2) 프로젝트 Pages의 repo base를 추정해서 고정 경로도 시도
-  //   https://user.github.io/<repo>/...  에서 <repo>를 pathname 첫 세그먼트로 본다
+  // 2) repo base 추정
   const parts = window.location.pathname.split("/").filter(Boolean);
   const repo = parts[0] || "";
   const repoBase = window.location.origin + "/" + repo + "/";
 
-  // /data 와 /powerball-c/data 둘 다 시도(레포 구조 흔들려도 잡히게)
+  // 3) /data 와 /powerball-c/data 둘 다 시도
   uniq.add(repoBase + "data/" + relPath.replace(/^(\.\.\/)+/,"").replace(/^data\//,""));
   uniq.add(repoBase + "powerball-c/data/" + relPath.replace(/^(\.\.\/)+/,"").replace(/^data\//,""));
 
-  // 3) (혹시) 같은 폴더 아래 data 가 있는 구조
+  // 4) 같은 폴더 아래 data
   uniq.add(new URL("./data/" + relPath.split("/").pop(), window.location.href).toString());
 
   return Array.from(uniq);
 }
-
 async function fetchFirstOkJson(candidates){
   const tried = [];
   for(const u of candidates){
@@ -408,24 +724,28 @@ async function fetchFirstOkJson(candidates){
   }
   return { ok:false, data:null, tried };
 }
-
 async function loadData(){
   const freqCandidates = buildCandidateUrls("../data/powerball_freq.json");
   const res = await fetchFirstOkJson(freqCandidates);
 
   if(res.ok){
     FREQ = res.data;
-    meta.innerHTML = `✅ loaded: <span class="mono">${res.tried.find(x=>String(x.status).startsWith("2"))?.url || "OK"}</span><br/>data updatedAt: <span class="mono">${FREQ.updatedAt}</span> · lastRound: <span class="mono">${FREQ.allTime.lastRound}</span>`;
+    const okUrl = res.tried.find(x=>String(x.status).startsWith("2"))?.url || "OK";
+    meta.innerHTML = `✅ loaded: <span class="mono">${okUrl}</span><br/>data updatedAt: <span class="mono">${FREQ.updatedAt}</span> · lastRound: <span class="mono">${FREQ.allTime.lastRound}</span>`;
     renderHot();
+    renderHistory();
+    updateStatusLine();
     return;
   }
 
-  // 실패 진단 표시(어떤 URL이 몇 status로 실패했는지)
   const diag = res.tried.map(x=>`- ${x.status}  ${x.url}`).join("<br/>");
   meta.innerHTML = `❌ 데이터 로딩 실패<br/><span class="small">아래 URL들이 200이 안 나왔어요:</span><br/><span class="mono">${diag}</span>`;
   out.innerHTML = `<div class="small">/data/powerball_freq.json 로딩 실패</div>`;
 }
 
+// ---------------------------
+// 추천 실행
+// ---------------------------
 function doRecommend(n){
   if(!FREQ){ return; }
   saveSeed();
@@ -434,21 +754,72 @@ function doRecommend(n){
 
   const sets = [];
   for(let i=0;i<n;i++){
-    const c = baseCycle + (i*9973); // 큰 소수로 분산
-    sets.push(recommendOne(seedStr, c, 17+i));
+    const c = baseCycle + (i*9973);
+    if(GAME === "select"){
+      sets.push(recommendSelect(seedStr, c, 17+i));
+    }else{
+      sets.push(recommendSum(seedStr, c, 71+i, SUM_RULE));
+    }
   }
 
+  // ✅ cycle 1 증가
   incCycle(1);
-  renderSets(sets);
+
+  // ✅ 렌더
+  if(GAME === "select") renderSetsSelect(sets);
+  else renderSetsSum(sets);
+
+  // ✅ 히스토리 저장
+  const hist = loadHist();
+  for(const s of sets){
+    let key, text;
+    if(GAME === "select"){
+      key = `select|${MODE}|${s.balls.join(",")}|${s.powerball}`;
+      text = `[선택/${MODE}] ${fmtSetSelect(s)}`;
+    }else{
+      key = `sum|${SUM_RULE}|${MODE}|${s.sumPick}|${s.powerBand}`;
+      text = `[합:${SUM_RULE}/${MODE}] ${fmtSetSum(s)}`;
+    }
+    hist.unshift({ key, text });
+  }
+  saveHist(hist);
+  renderHistory();
+  updateStatusLine();
+  renderHot();
 }
 
+// ---------------------------
+// 이벤트
+// ---------------------------
 document.addEventListener("click",(e)=>{
   const t = e.target;
-  if(t.classList && t.classList.contains("pill")){
-    document.querySelectorAll(".pill").forEach(p=>p.classList.remove("on"));
+
+  // mode 탭
+  if(t.classList && t.classList.contains("pill") && t.dataset.mode){
+    document.querySelectorAll(".pill[data-mode]").forEach(p=>p.classList.remove("on"));
     t.classList.add("on");
     MODE = t.dataset.mode;
-    if(FREQ){ renderHot(); }
+    if(FREQ){ renderHot(); updateStatusLine(); }
+    return;
+  }
+
+  // game 탭
+  if(t.classList && t.classList.contains("pill") && t.dataset.game){
+    document.querySelectorAll(".pill[data-game]").forEach(p=>p.classList.remove("on"));
+    t.classList.add("on");
+    GAME = t.dataset.game;
+    $("sumRuleBar").style.display = (GAME==="sum") ? "flex" : "none";
+    if(FREQ){ renderHot(); updateStatusLine(); }
+    return;
+  }
+
+  // sum rule 탭
+  if(t.classList && t.classList.contains("pill") && t.dataset.sumrule){
+    document.querySelectorAll(".pill[data-sumrule]").forEach(p=>p.classList.remove("on"));
+    t.classList.add("on");
+    SUM_RULE = t.dataset.sumrule;
+    if(FREQ){ renderHot(); updateStatusLine(); }
+    return;
   }
 });
 
@@ -456,16 +827,21 @@ $("btn1").addEventListener("click", ()=>doRecommend(1));
 $("btn5").addEventListener("click", ()=>doRecommend(5));
 $("btn10").addEventListener("click", ()=>doRecommend(10));
 
-$("jump100").addEventListener("click", ()=>{ incCycle(100); });
-$("jump1000").addEventListener("click", ()=>{ incCycle(1000); });
+$("jump100").addEventListener("click", ()=>{ incCycle(100); updateStatusLine(); });
+$("jump1000").addEventListener("click", ()=>{ incCycle(1000); updateStatusLine(); });
 
 $("copySeed").addEventListener("click", async ()=>{
   const v = $("seed").value.trim();
   try{ await navigator.clipboard.writeText(v); }catch{}
 });
+$("resetCycle").addEventListener("click", ()=>{ setCycle(0); updateStatusLine(); });
 
-$("resetCycle").addEventListener("click", ()=>{ setCycle(0); });
-$("seed").addEventListener("change", ()=>{ saveSeed(); });
+$("seed").addEventListener("change", ()=>{ saveSeed(); updateStatusLine(); });
+
+$("clearHistory").addEventListener("click", ()=>{
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+});
 
 loadLocal();
 loadData();
