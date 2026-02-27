@@ -1,0 +1,37 @@
+name: Update Powerball Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # KST 12:10 / 18:10 / 00:10  =>  UTC 03:10 / 09:10 / 15:10
+    - cron: "10 3 * * *"
+    - cron: "10 9 * * *"
+    - cron: "10 15 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-powerball
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Update data (draws + freq)
+        run: node scripts/update_powerball.mjs
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(data): update powerball draws/freq"
+          file_pattern: "data/powerball_draws.json data/powerball_freq.json"
