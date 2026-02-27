@@ -289,8 +289,6 @@ const SUM_LABEL = {
   oddeven: { ODD: "홀", EVEN: "짝" }
 };
 const PB_BAND_LABEL = { A: "A(0~2)", B: "B(3~4)", C: "C(5~6)", D: "D(7~9)" };
-
-// ✅ 표시용 룰 이름(oddeven 보이지 않게)
 const RULE_TITLE = { size: "대/중/소", band: "A~F 구간", oddeven: "홀/짝" };
 
 function deviceSeedDefault(){
@@ -381,7 +379,7 @@ function recommendSelect(seedStr, cycle, salt){
   return {balls, powerball};
 }
 
-// ✅ oddeven -> oddEven 매핑 + 홀/짝은 체감되게 교대
+// ✅ oddeven -> oddEven 매핑 + 홀/짝도 seed 반영(시작점/순서 달라짐)
 function recommendSum(seedStr, cycle, salt, rule){
   const ruleKey = (rule === "oddeven") ? "oddEven" : rule;
 
@@ -396,16 +394,19 @@ function recommendSum(seedStr, cycle, salt, rule){
   const sumScores = scoreList(allSum[ruleKey], allTotal, winSum[ruleKey], winTotal, alpha);
   const pbScores  = scoreList(allSum.powerBand, allTotal, winSum.powerBand, winTotal, alpha);
 
-  const sumOrder = sumScores.map(x => x.k);
-  const pbOrder  = pbScores.map(x => x.k);
+  const sumOrder = sumScores.map(x => x.k); // ODD/EVEN or A~F or S/M/L
+  const pbOrder  = pbScores.map(x => x.k);  // A~D
 
   const seedKey = `${seedStr}|sum|${rule}|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
   const base = fnv1a64(seedKey);
   const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
 
+  // ✅ 홀/짝: seed로 시작 오프셋을 달리하고, cycle로 교대/회전(결정론)
   if(rule === "oddeven"){
-    const sumPick = sumOrder[(cycle + salt) % sumOrder.length];
-    const powerBand = pbOrder[((cycle * 3) + salt) % pbOrder.length];
+    const offS = Number(next() % BigInt(sumOrder.length));         // 0..1
+    const offP = Number((next() >> 17n) % BigInt(pbOrder.length)); // 0..3
+    const sumPick = sumOrder[(offS + cycle + salt) % sumOrder.length];
+    const powerBand = pbOrder[(offP + (cycle * 3) + salt) % pbOrder.length];
     return {rule, sumPick, powerBand};
   }
 
