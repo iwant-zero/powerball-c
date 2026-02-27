@@ -1,0 +1,8 @@
+{  "name": "powerball-c",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "update": "node ../scripts/update_powerball.mjs",
+    "recommend:10": "node ../scripts/update_powerball.mjs --no-write --recommend 10"
+  }
+}
