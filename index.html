@@ -450,6 +450,8 @@ function recommendSelect(seedStr, cycle, salt){
 // 추천: 숫자합 (룰 + 파워볼 구간)
 // ---------------------------
 function recommendSum(seedStr, cycle, salt, rule){
+  const ruleKey = (rule === "oddeven") ? "oddEven" : rule;
+
   const alpha = alphaForMode();
   const win = currentWindow() || {totalDraws:0, sum:{size:{}, band:{}, oddEven:{}, powerBand:{}}};
 
@@ -457,6 +459,13 @@ function recommendSum(seedStr, cycle, salt, rule){
   const allSum = getAllSum();
   const winSum = getWinSum();
   const winTotal = win.totalDraws || 0;
+
+  const sumScores = scoreList(allSum[ruleKey], allTotal, winSum[ruleKey], winTotal, alpha);
+  const pbScores  = scoreList(allSum.powerBand, allTotal, winSum.powerBand, winTotal, alpha);
+
+  // 이하 로직은 그대로
+  ...
+}
 
   // 점수(빈도) 순서 = “결정론 순환 트랙”
   const sumScores = scoreList(allSum[rule], allTotal, winSum[rule], winTotal, alpha);
