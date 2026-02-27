@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>POWER BALL (동행복권) 빈도 기반 추천기</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#111a33; --muted:#9fb0d0; --txt:#eef3ff;
+      --line:rgba(255,255,255,.08);
+      --a:#79a8ff; --ok:#7dffb2; --warn:#ffd37d;
+      --r1:#ffd66e; --r2:#7de1ff; --r3:#a98bff; --r4:#7dffb2;
+      --pb:#ff6ea8;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 700px at 30% 10%, #16224a 0%, var(--bg) 55%) fixed;color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
+    a{color:var(--a);text-decoration:none}
+    .wrap{max-width:980px;margin:0 auto;padding:18px}
+    .top{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .brand{flex:1;min-width:260px}
+    .brand h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .brand p{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
+    .card{background:rgba(17,26,51,.82);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);backdrop-filter: blur(8px)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .grow{flex:1}
+    .pillbar{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03);color:var(--txt);cursor:pointer;font-size:13px}
+    .pill.on{border-color:rgba(121,168,255,.6);box-shadow:0 0 0 3px rgba(121,168,255,.12) inset}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    input{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(0,0,0,.25);color:var(--txt);outline:none
+    }
+    .btn{
+      padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:var(--txt);cursor:pointer;font-weight:700
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:rgba(121,168,255,.18);border-color:rgba(121,168,255,.35)}
+    .btn.good{background:rgba(125,255,178,.12);border-color:rgba(125,255,178,.35)}
+    .btn.warn{background:rgba(255,211,125,.12);border-color:rgba(255,211,125,.35)}
+    .small{font-size:12px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+    @media (min-width:860px){ .grid{grid-template-columns:1.05fr .95fr} }
+    .balls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .ball{
+      width:44px;height:44px;border-radius:999px;display:grid;place-items:center;
+      font-weight:900;font-size:15px;border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 10px 18px rgba(0,0,0,.25)
+    }
+    .ball.r1{background:rgba(255,214,110,.22)}
+    .ball.r2{background:rgba(125,225,255,.18)}
+    .ball.r3{background:rgba(169,139,255,.18)}
+    .ball.r4{background:rgba(125,255,178,.16)}
+    .ball.pb{background:rgba(255,110,168,.22);border-color:rgba(255,110,168,.45)}
+    .set{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 10px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.18)}
+    .set + .set{margin-top:10px}
+    .set .idx{width:22px;color:var(--muted);font-weight:800}
+    .sep{height:1px;background:var(--line);margin:12px 0}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .hotlist{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .hotitem{padding:8px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);text-align:center}
+    .hotitem b{display:block;font-size:14px}
+    .hotitem span{display:block;font-size:11px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>POWER BALL (동행복권) — 빈도 기반 추천기</h1>
+        <p>
+          ✅ <b>무작위(Math.random/crypto)</b> 없음. <b>데이터 + 시드 + 사이클</b>로만 돌아가는 결정론 추천.<br/>
+          ✅ “최근 1/7/30일” 가중 탭 + “시드 입력/공유” + “cycle 점프(+100/+1000)” 포함.
+        </p>
+      </div>
+
+      <div class="card" style="min-width:320px;flex:1">
+        <div class="row">
+          <div class="grow">
+            <label>최근 가중 (탭)</label>
+            <div class="pillbar">
+              <button class="pill on" data-mode="1d">최근 1일</button>
+              <button class="pill" data-mode="7d">최근 7일</button>
+              <button class="pill" data-mode="30d">최근 30일</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row">
+          <div class="grow">
+            <label>시드(Seed) — 사람마다 다르게 입력/공유(겹침↓)</label>
+            <input id="seed" class="mono" placeholder="예: TEAM-A / 닉네임 / 2026-02-27-1" />
+            <div class="small" style="margin-top:6px">
+              기본값: 기기별 고정 시드(로컬 저장). 필요하면 직접 바꿔서 공유하면 됨.
+            </div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row" style="align-items:flex-end">
+          <div class="grow">
+            <label>Cycle (버튼 누를 때마다 증가)</label>
+            <input id="cycle" class="mono" readonly />
+            <div class="small" style="margin-top:6px">
+              점프 후 추천 버튼을 누르면 큰 폭으로 순환(+100/+1000…)
+            </div>
+          </div>
+          <button class="btn warn" id="jump100">+100</button>
+          <button class="btn warn" id="jump1000">+1000</button>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="copySeed">시드 복사</button>
+          <button class="btn" id="resetCycle">cycle 리셋</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row" style="align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-weight:900">추천 번호</div>
+            <div class="small" id="meta">데이터 로딩 중…</div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="btn1">1개 추천</button>
+            <button class="btn good" id="btn5">5개 추천</button>
+            <button class="btn good" id="btn10">10개 추천</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div id="out"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:900">핫 넘버(상위 빈도)</div>
+        <div class="small" id="hotMeta" style="margin-top:4px">—</div>
+        <div class="sep"></div>
+        <div style="font-weight:900;margin-bottom:6px">일반볼 Top 14</div>
+        <div class="hotlist" id="hotNormal"></div>
+        <div class="sep"></div>
+        <div style="font-weight:900;margin-bottom:6px">파워볼 Top 10</div>
+        <div class="hotlist" id="hotPower" style="grid-template-columns:repeat(5,1fr)"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="small">
+        ⚠️ 과거 빈도는 미래 당첨을 보장하지 않음(참고용).<br/>
+        데이터: Actions가 <span class="mono">/data/powerball_*.json</span> 갱신 → 이 페이지는 그 JSON을 불러와 표시.
+      </div>
+    </div>
+  </div>
+
+<script>
+/** ❌ Math.random/crypto 사용 안 함: 결정론 RNG */
+function fnv1a64(str){
+  let h = 0xcbf29ce484222325n;
+  const prime = 0x100000001b3n;
+  for(let i=0;i<str.length;i++){
+    h ^= BigInt(str.charCodeAt(i));
+    h = (h * prime) & 0xffffffffffffffffn;
+  }
+  return h;
+}
+function splitmix64(seed){
+  let x = seed & 0xffffffffffffffffn;
+  return function(){
+    x = (x + 0x9e3779b97f4a7c15n) & 0xffffffffffffffffn;
+    let z = x;
+    z = (z ^ (z >> 30n)) * 0xbf58476d1ce4e5b9n & 0xffffffffffffffffn;
+    z = (z ^ (z >> 27n)) * 0x94d049bb133111ebn & 0xffffffffffffffffn;
+    return (z ^ (z >> 31n)) & 0xffffffffffffffffn;
+  }
+}
+function pickUnique(list, k, nextU64){
+  const arr = list.slice();
+  const out = [];
+  while(out.length<k && arr.length){
+    const idx = Number(nextU64() % BigInt(arr.length));
+    out.push(arr[idx]);
+    arr.splice(idx,1);
+  }
+  return out;
+}
+function scoreList(allCounts, allTotal, winCounts, winTotal, alpha){
+  const out = [];
+  for(const key in allCounts){
+    const cAll = allCounts[key]||0;
+    const cWin = (winCounts && winCounts[key])||0;
+    const pAll = allTotal>0 ? cAll/allTotal : 0;
+    const pWin = winTotal>0 ? cWin/winTotal : 0;
+    const s = (1-alpha)*pAll + alpha*pWin;
+    out.push({n:Number(key), s});
+  }
+  out.sort((a,b)=> (b.s-a.s) || (a.n-b.n));
+  return out;
+}
+function bandSplit(sortedNums){
+  const n = sortedNums.length;
+  const topN = Math.max(1, Math.floor(n*0.35));
+  const lowN = Math.max(1, Math.floor(n*0.25));
+  return {
+    top: sortedNums.slice(0, topN),
+    mid: sortedNums.slice(topN, n-lowN),
+    low: sortedNums.slice(n-lowN)
+  };
+}
+function ballClass(n){
+  if(n<=7) return "r1";
+  if(n<=14) return "r2";
+  if(n<=21) return "r3";
+  return "r4";
+}
+
+const $ = (id)=>document.getElementById(id);
+const out = $("out");
+const meta = $("meta");
+const hotMeta = $("hotMeta");
+
+let FREQ = null;
+let MODE = "1d";
+
+function deviceSeedDefault(){
+  const fp = [
+    navigator.userAgent,
+    String(screen.width)+"x"+String(screen.height),
+    String(navigator.language||""),
+    String(navigator.platform||"")
+  ].join("|");
+  const h = fnv1a64(fp);
+  return "PB-" + h.toString(16);
+}
+
+function loadLocal(){
+  const seed = localStorage.getItem("pb_seed") || deviceSeedDefault();
+  const cycle = Number(localStorage.getItem("pb_cycle") || "0");
+  $("seed").value = seed;
+  $("cycle").value = String(cycle);
+  localStorage.setItem("pb_seed", seed);
+  localStorage.setItem("pb_cycle", String(cycle));
+}
+function saveSeed(){
+  localStorage.setItem("pb_seed", $("seed").value.trim());
+}
+function setCycle(v){
+  localStorage.setItem("pb_cycle", String(v));
+  $("cycle").value = String(v);
+}
+function incCycle(delta){
+  const cur = Number(localStorage.getItem("pb_cycle") || "0");
+  setCycle(cur + delta);
+}
+
+function currentWindow(){
+  if(!FREQ) return null;
+  if(MODE==="1d") return FREQ.recent?.d1;
+  if(MODE==="7d") return FREQ.recent?.d7;
+  return FREQ.recent?.d30;
+}
+function alphaForMode(){
+  return MODE==="1d" ? 0.65 : MODE==="7d" ? 0.45 : 0.25;
+}
+
+function recommendOne(seedStr, cycle, salt){
+  const alpha = alphaForMode();
+  const win = currentWindow() || {totalDraws:0, normal:{}, power:{}};
+
+  const allTotal = FREQ.allTime?.totalDraws || 0;
+  const allNormal = FREQ.allTime?.normal || {};
+  const allPower = FREQ.allTime?.power || {};
+
+  const ns = scoreList(allNormal, allTotal, win.normal, win.totalDraws, alpha);
+  const ps = scoreList(allPower, allTotal, win.power, win.totalDraws, alpha);
+
+  const normalBand = bandSplit(ns.map(x=>x.n));
+  const powerBand = bandSplit(ps.map(x=>x.n));
+
+  const seedKey = `${seedStr}|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
+  const base = fnv1a64(seedKey);
+  const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
+
+  const t = 1 + Number(next()%3n);             // top 1..3
+  const l = 1 + Number((next()>>7n)%2n);       // low 1..2
+  let m = 5 - t - l; if(m<0) m=0;
+
+  const balls = [
+    ...pickUnique(normalBand.top, t, next),
+    ...pickUnique(normalBand.mid, m, next),
+    ...pickUnique(normalBand.low, 5 - t - m, next),
+  ].slice(0,5).sort((a,b)=>a-b);
+
+  const pPick = Number((next()>>13n)%3n);
+  const pPool = pPick===0 ? powerBand.top : (pPick===1 ? powerBand.mid : powerBand.low);
+  const powerball = pickUnique(pPool, 1, next)[0];
+
+  return {balls, powerball};
+}
+
+function renderSets(sets){
+  out.innerHTML = "";
+  sets.forEach((s, i)=>{
+    const row = document.createElement("div");
+    row.className = "set";
+    const left = document.createElement("div");
+    left.style.display="flex";
+    left.style.alignItems="center";
+    left.style.gap="10px";
+
+    const idx = document.createElement("div");
+    idx.className="idx mono";
+    idx.textContent = String(i+1);
+
+    const balls = document.createElement("div");
+    balls.className="balls";
+    s.balls.forEach(n=>{
+      const b = document.createElement("div");
+      b.className = `ball ${ballClass(n)}`;
+      b.textContent = String(n);
+      balls.appendChild(b);
+    });
+
+    const pb = document.createElement("div");
+    pb.className="ball pb";
+    pb.textContent = String(s.powerball);
+
+    left.appendChild(idx);
+    left.appendChild(balls);
+
+    row.appendChild(left);
+    row.appendChild(pb);
+    out.appendChild(row);
+  });
+}
+
+function renderHot(){
+  const alpha = alphaForMode();
+  const win = currentWindow() || {totalDraws:0, normal:{}, power:{}};
+
+  const ns = scoreList(FREQ.allTime.normal, FREQ.allTime.totalDraws, win.normal, win.totalDraws, alpha);
+  const ps = scoreList(FREQ.allTime.power, FREQ.allTime.totalDraws, win.power, win.totalDraws, alpha);
+
+  hotMeta.textContent = `mode=${MODE} · recent=${win.fromYmd}~${win.toYmd} · allTimeDraws=${FREQ.allTime.totalDraws}`;
+
+  const hn = $("hotNormal");
+  hn.innerHTML = "";
+  ns.slice(0,14).forEach(x=>{
+    const d = document.createElement("div");
+    d.className="hotitem";
+    d.innerHTML = `<b>${x.n}</b><span>score ${x.s.toFixed(4)}</span>`;
+    hn.appendChild(d);
+  });
+
+  const hp = $("hotPower");
+  hp.innerHTML = "";
+  ps.slice(0,10).forEach(x=>{
+    const d = document.createElement("div");
+    d.className="hotitem";
+    d.innerHTML = `<b>${x.n}</b><span>score ${x.s.toFixed(4)}</span>`;
+    hp.appendChild(d);
+  });
+}
+
+async function loadData(){
+  // index.html은 /powerball-c/ 폴더에 있으니, data는 ../data/ 로 접근
+  const freqUrl = "../data/powerball_freq.json";
+  try{
+    const r = await fetch(freqUrl, {cache:"no-store"});
+    if(!r.ok) throw new Error("fetch failed");
+    FREQ = await r.json();
+    meta.innerHTML = `data updatedAt: <span class="mono">${FREQ.updatedAt}</span> · lastRound: <span class="mono">${FREQ.allTime.lastRound}</span>`;
+    renderHot();
+  }catch(e){
+    meta.textContent = "데이터가 없습니다. (Actions 업데이트가 아직 안 됐거나 /data 경로가 안 보일 수 있어요)";
+    out.innerHTML = `<div class="small">/data/powerball_freq.json 로딩 실패</div>`;
+  }
+}
+
+function doRecommend(n){
+  if(!FREQ){ return; }
+  saveSeed();
+  const seedStr = $("seed").value.trim() || deviceSeedDefault();
+  const baseCycle = Number(localStorage.getItem("pb_cycle") || "0");
+
+  // 클릭 1번에 여러 세트 뽑을 때도 서로 다른 cycle offset으로 “수백~무한” 순환
+  const sets = [];
+  for(let i=0;i<n;i++){
+    const c = baseCycle + (i*9973); // 큰 소수로 분산
+    sets.push(recommendOne(seedStr, c, 17+i));
+  }
+
+  // ✅ 버튼 누를 때마다 cycle 1 증가 (다음 클릭은 또 다른 조합)
+  incCycle(1);
+  renderSets(sets);
+}
+
+document.addEventListener("click",(e)=>{
+  const t = e.target;
+  if(t.classList && t.classList.contains("pill")){
+    document.querySelectorAll(".pill").forEach(p=>p.classList.remove("on"));
+    t.classList.add("on");
+    MODE = t.dataset.mode;
+    if(FREQ){ renderHot(); }
+  }
+});
+
+$("btn1").addEventListener("click", ()=>doRecommend(1));
+$("btn5").addEventListener("click", ()=>doRecommend(5));
+$("btn10").addEventListener("click", ()=>doRecommend(10));
+
+$("jump100").addEventListener("click", ()=>{ incCycle(100); });
+$("jump1000").addEventListener("click", ()=>{ incCycle(1000); });
+
+$("copySeed").addEventListener("click", async ()=>{
+  const v = $("seed").value.trim();
+  try{ await navigator.clipboard.writeText(v); }catch{}
+});
+
+$("resetCycle").addEventListener("click", ()=>{ setCycle(0); });
+
+$("seed").addEventListener("change", ()=>{ saveSeed(); });
+
+loadLocal();
+loadData();
+</script>
+</body>
+</html>
