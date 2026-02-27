@@ -458,22 +458,41 @@ function recommendSum(seedStr, cycle, salt, rule){
   const winSum = getWinSum();
   const winTotal = win.totalDraws || 0;
 
+  // 점수(빈도) 순서 = “결정론 순환 트랙”
   const sumScores = scoreList(allSum[rule], allTotal, winSum[rule], winTotal, alpha);
   const pbScores  = scoreList(allSum.powerBand, allTotal, winSum.powerBand, winTotal, alpha);
 
-  const sumBands = bandSplitGeneric(sumScores.map(x=>x.k));
-  const pbBands  = bandSplitGeneric(pbScores.map(x=>x.k));
+  const sumOrder = sumScores.map(x => x.k);  // 예: oddeven이면 ["EVEN","ODD"] 이런 식
+  const pbOrder  = pbScores.map(x => x.k);   // 예: ["D","C","B","A"] 등
 
+  // ✅ 무작위 없이: seed+cycle로 만든 nextU64 (결정론)
   const seedKey = `${seedStr}|sum|${rule}|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
   const base = fnv1a64(seedKey);
   const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
 
-  const sumPick = pickOneFromBands(sumBands, next);
-  const pbPick  = pickOneFromBands(pbBands, next);
+  // ✅ 홀/짝(rule=oddeven)은 “변화가 체감되게” 강제 교대 + PB구간 회전
+  if(rule === "oddeven"){
+    const sumPick = sumOrder[(cycle + salt) % sumOrder.length];              // 홀↔짝 교대
+    const powerBand = pbOrder[((cycle * 3) + salt) % pbOrder.length];        // PB도 같이 회전
+    return {rule, sumPick, powerBand};
+  }
 
-  return {rule, sumPick, powerBand: pbPick};
+  // ✅ 다른 룰(size/band)은 “빈도 순서”를 유지하면서도 cycle로 천천히 회전
+  // - 70%: 상위권, 25%: 중위권, 5%: 하위권 (결정론: next로 band 선택)
+  const sumBands = bandSplitGeneric(sumOrder);
+  const pbBands  = bandSplitGeneric(pbOrder);
+
+  const gateS = Number(next() % 100n);
+  const poolS = gateS < 70 ? sumBands.top : gateS < 95 ? (sumBands.mid.length ? sumBands.mid : sumBands.top) : (sumBands.low.length ? sumBands.low : sumBands.top);
+  const sumPick = poolS[(cycle + salt) % poolS.length];
+
+  const gateP = Number((next() >> 11n) % 100n);
+  const poolP = gateP < 70 ? pbBands.top : gateP < 95 ? (pbBands.mid.length ? pbBands.mid : pbBands.top) : (pbBands.low.length ? pbBands.low : pbBands.top);
+  const powerBand = poolP[((cycle * 2) + salt) % poolP.length];
+
+  return {rule, sumPick, powerBand};
 }
-
+  
 // ---------------------------
 // 렌더: 추천 결과
 // ---------------------------
