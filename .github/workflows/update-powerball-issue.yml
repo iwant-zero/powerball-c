@@ -1,0 +1,49 @@
+name: Powerball Recommendation (Issue)
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  recommend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # ✅ 데이터가 없을 때를 대비해(첫 실행) 최신 데이터 먼저 한 번 생성/갱신
+      - name: Ensure latest data exists
+        run: node scripts/update_powerball.mjs
+
+      - name: Build recommendation markdown
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.actor }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: node scripts/update_powerball.mjs --issue > powerball_reco.md
+
+      - name: Comment to issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const body = fs.readFileSync("powerball_reco.md", "utf8");
+            const issue_number = context.payload.issue.number;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body
+            });
