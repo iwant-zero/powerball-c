@@ -154,7 +154,7 @@
     <div class="card" style="margin-top:12px">
       <div class="small">
         ⚠️ 과거 빈도는 미래 당첨을 보장하지 않음(참고용).<br/>
-        데이터: Actions가 <span class="mono">/data/powerball_*.json</span> 갱신 → 이 페이지는 그 JSON을 불러와 표시.
+        데이터: Actions가 <span class="mono">/data/</span> 또는 <span class="mono">/powerball-c/data/</span> 갱신 → 이 페이지는 자동 탐색해서 불러옴.
       </div>
     </div>
   </div>
@@ -287,8 +287,8 @@ function recommendOne(seedStr, cycle, salt){
   const base = fnv1a64(seedKey);
   const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
 
-  const t = 1 + Number(next()%3n);             // top 1..3
-  const l = 1 + Number((next()>>7n)%2n);       // low 1..2
+  const t = 1 + Number(next()%3n);
+  const l = 1 + Number((next()>>7n)%2n);
   let m = 5 - t - l; if(m<0) m=0;
 
   const balls = [
@@ -368,19 +368,62 @@ function renderHot(){
   });
 }
 
-async function loadData(){
-  // index.html은 /powerball-c/ 폴더에 있으니, data는 ../data/ 로 접근
-  const freqUrl = "../data/powerball_freq.json";
-  try{
-    const r = await fetch(freqUrl, {cache:"no-store"});
-    if(!r.ok) throw new Error("fetch failed");
-    FREQ = await r.json();
-    meta.innerHTML = `data updatedAt: <span class="mono">${FREQ.updatedAt}</span> · lastRound: <span class="mono">${FREQ.allTime.lastRound}</span>`;
-    renderHot();
-  }catch(e){
-    meta.textContent = "데이터가 없습니다. (Actions 업데이트가 아직 안 됐거나 /data 경로가 안 보일 수 있어요)";
-    out.innerHTML = `<div class="small">/data/powerball_freq.json 로딩 실패</div>`;
+/** ✅ 여기만 “확실하게” 고침: GitHub Pages 구조가 달라도 자동 탐색 */
+function buildCandidateUrls(relPath){
+  const uniq = new Set();
+
+  // 1) 현재 페이지 기준 상대경로(가장 우선)
+  uniq.add(new URL(relPath, window.location.href).toString());
+
+  // 2) 프로젝트 Pages의 repo base를 추정해서 고정 경로도 시도
+  //   https://user.github.io/<repo>/...  에서 <repo>를 pathname 첫 세그먼트로 본다
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const repo = parts[0] || "";
+  const repoBase = window.location.origin + "/" + repo + "/";
+
+  // /data 와 /powerball-c/data 둘 다 시도(레포 구조 흔들려도 잡히게)
+  uniq.add(repoBase + "data/" + relPath.replace(/^(\.\.\/)+/,"").replace(/^data\//,""));
+  uniq.add(repoBase + "powerball-c/data/" + relPath.replace(/^(\.\.\/)+/,"").replace(/^data\//,""));
+
+  // 3) (혹시) 같은 폴더 아래 data 가 있는 구조
+  uniq.add(new URL("./data/" + relPath.split("/").pop(), window.location.href).toString());
+
+  return Array.from(uniq);
+}
+
+async function fetchFirstOkJson(candidates){
+  const tried = [];
+  for(const u of candidates){
+    const bust = (u.includes("?") ? "&" : "?") + "v=" + Date.now();
+    const url = u + bust;
+    try{
+      const r = await fetch(url, { cache:"no-store" });
+      tried.push({url, status:r.status});
+      if(r.ok){
+        return { ok:true, data: await r.json(), tried };
+      }
+    }catch(e){
+      tried.push({url, status:"ERR"});
+    }
   }
+  return { ok:false, data:null, tried };
+}
+
+async function loadData(){
+  const freqCandidates = buildCandidateUrls("../data/powerball_freq.json");
+  const res = await fetchFirstOkJson(freqCandidates);
+
+  if(res.ok){
+    FREQ = res.data;
+    meta.innerHTML = `✅ loaded: <span class="mono">${res.tried.find(x=>String(x.status).startsWith("2"))?.url || "OK"}</span><br/>data updatedAt: <span class="mono">${FREQ.updatedAt}</span> · lastRound: <span class="mono">${FREQ.allTime.lastRound}</span>`;
+    renderHot();
+    return;
+  }
+
+  // 실패 진단 표시(어떤 URL이 몇 status로 실패했는지)
+  const diag = res.tried.map(x=>`- ${x.status}  ${x.url}`).join("<br/>");
+  meta.innerHTML = `❌ 데이터 로딩 실패<br/><span class="small">아래 URL들이 200이 안 나왔어요:</span><br/><span class="mono">${diag}</span>`;
+  out.innerHTML = `<div class="small">/data/powerball_freq.json 로딩 실패</div>`;
 }
 
 function doRecommend(n){
@@ -389,14 +432,12 @@ function doRecommend(n){
   const seedStr = $("seed").value.trim() || deviceSeedDefault();
   const baseCycle = Number(localStorage.getItem("pb_cycle") || "0");
 
-  // 클릭 1번에 여러 세트 뽑을 때도 서로 다른 cycle offset으로 “수백~무한” 순환
   const sets = [];
   for(let i=0;i<n;i++){
     const c = baseCycle + (i*9973); // 큰 소수로 분산
     sets.push(recommendOne(seedStr, c, 17+i));
   }
 
-  // ✅ 버튼 누를 때마다 cycle 1 증가 (다음 클릭은 또 다른 조합)
   incCycle(1);
   renderSets(sets);
 }
@@ -424,7 +465,6 @@ $("copySeed").addEventListener("click", async ()=>{
 });
 
 $("resetCycle").addEventListener("click", ()=>{ setCycle(0); });
-
 $("seed").addEventListener("change", ()=>{ saveSeed(); });
 
 loadLocal();
