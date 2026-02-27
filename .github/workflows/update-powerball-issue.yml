@@ -22,13 +22,12 @@ jobs:
         with:
           node-version: "20"
 
-      # ✅ 데이터가 없을 때를 대비해(첫 실행) 최신 데이터 먼저 한 번 생성/갱신
+      # (첫 실행 대비) 최신 데이터 먼저 생성/갱신
       - name: Ensure latest data exists
         run: node scripts/update_powerball.mjs
 
       - name: Build recommendation markdown
         env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ACTOR: ${{ github.actor }}
           COMMENT_BODY: ${{ github.event.comment.body }}
