@@ -210,7 +210,6 @@
   </div>
 
 <script>
-/** ❌ Math.random/crypto 사용 안 함: 결정론 RNG */
 function fnv1a64(str){
   let h = 0xcbf29ce484222325n;
   const prime = 0x100000001b3n;
@@ -263,14 +262,6 @@ function bandSplitGeneric(sortedKeys){
     low: sortedKeys.slice(Math.max(topN, n-lowN))
   };
 }
-function pickOneFromBands(bands, nextU64){
-  const gate = Number(nextU64() % 100n);
-  const pool =
-    gate < 55 ? bands.top :
-    gate < 85 ? (bands.mid.length ? bands.mid : bands.top) :
-                (bands.low.length ? bands.low : bands.top);
-  return pool[Number(nextU64() % BigInt(pool.length))];
-}
 function ballClass(n){
   if(n<=7) return "r1";
   if(n<=14) return "r2";
@@ -286,12 +277,9 @@ const hotArea = $("hotArea");
 
 let FREQ = null;
 let MODE = "1d";
-let GAME = "select";      // "select" | "sum"
-let SUM_RULE = "size";    // "size" | "band" | "oddeven"
+let GAME = "select";
+let SUM_RULE = "size";
 
-// ---------------------------
-// 숫자합 라벨
-// ---------------------------
 const SUM_LABEL = {
   size: { S: "소(15~64)", M: "중(65~80)", L: "대(81~130)" },
   band: {
@@ -302,9 +290,9 @@ const SUM_LABEL = {
 };
 const PB_BAND_LABEL = { A: "A(0~2)", B: "B(3~4)", C: "C(5~6)", D: "D(7~9)" };
 
-// ---------------------------
-// 로컬 seed/cycle
-// ---------------------------
+// ✅ 표시용 룰 이름(oddeven 보이지 않게)
+const RULE_TITLE = { size: "대/중/소", band: "A~F 구간", oddeven: "홀/짝" };
+
 function deviceSeedDefault(){
   const fp = [
     navigator.userAgent,
@@ -334,9 +322,6 @@ function currentWindow(){
   return FREQ.recent?.d30;
 }
 
-// ---------------------------
-// ✅ 중복 자동 회피 토글(+37)
-// ---------------------------
 const AVOID_KEY = "pb_avoiddup_v1";
 function isAvoidDup(){ return localStorage.getItem(AVOID_KEY) === "1"; }
 function setAvoidDup(v){
@@ -351,18 +336,12 @@ function refreshAvoidUI(){
   b.classList.add("toggle");
 }
 
-// ---------------------------
-// FREQ 게터(구버전 호환)
-// ---------------------------
 function getAllSelectNormal(){ return (FREQ.allTime?.select?.normal) || FREQ.allTime?.normal || {}; }
 function getAllSelectPower(){ return (FREQ.allTime?.select?.power) || FREQ.allTime?.power || {}; }
 function getAllSum(){ return FREQ.allTime?.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} }; }
 function getWinSelect(){ const w = currentWindow() || {}; return w.select || { normal:{}, power:{} }; }
 function getWinSum(){ const w = currentWindow() || {}; return w.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} }; }
 
-// ---------------------------
-// 추천: 숫자선택
-// ---------------------------
 function recommendSelect(seedStr, cycle, salt){
   const alpha = alphaForMode();
   const win = currentWindow() || {totalDraws:0, select:{normal:{}, power:{}}};
@@ -402,13 +381,9 @@ function recommendSelect(seedStr, cycle, salt){
   return {balls, powerball};
 }
 
-// ---------------------------
-// ✅ 추천: 숫자합 (룰 + 파워볼 구간)
-// - 핵심 수정: UI 룰 "oddeven" ↔ 데이터키 "oddEven" 매핑
-// - 홀/짝은 클릭 시 체감되게 교대 + PB 구간도 회전
-// ---------------------------
+// ✅ oddeven -> oddEven 매핑 + 홀/짝은 체감되게 교대
 function recommendSum(seedStr, cycle, salt, rule){
-  const ruleKey = (rule === "oddeven") ? "oddEven" : rule;  // ✅ 매핑
+  const ruleKey = (rule === "oddeven") ? "oddEven" : rule;
 
   const alpha = alphaForMode();
   const win = currentWindow() || {totalDraws:0, sum:{size:{}, band:{}, oddEven:{}, powerBand:{}}};
@@ -421,21 +396,19 @@ function recommendSum(seedStr, cycle, salt, rule){
   const sumScores = scoreList(allSum[ruleKey], allTotal, winSum[ruleKey], winTotal, alpha);
   const pbScores  = scoreList(allSum.powerBand, allTotal, winSum.powerBand, winTotal, alpha);
 
-  const sumOrder = sumScores.map(x => x.k); // 예: ["EVEN","ODD"] or A~F / SML
-  const pbOrder  = pbScores.map(x => x.k);  // 예: ["D","C","B","A"]
+  const sumOrder = sumScores.map(x => x.k);
+  const pbOrder  = pbScores.map(x => x.k);
 
   const seedKey = `${seedStr}|sum|${rule}|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
   const base = fnv1a64(seedKey);
   const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
 
-  // ✅ 홀/짝은 “변화가 보이게” 강제 순환(결정론)
   if(rule === "oddeven"){
     const sumPick = sumOrder[(cycle + salt) % sumOrder.length];
     const powerBand = pbOrder[((cycle * 3) + salt) % pbOrder.length];
     return {rule, sumPick, powerBand};
   }
 
-  // size/band는 “상위권 유지 + cycle로 회전”
   const sumBands = bandSplitGeneric(sumOrder);
   const pbBands  = bandSplitGeneric(pbOrder);
 
@@ -450,9 +423,6 @@ function recommendSum(seedStr, cycle, salt, rule){
   return {rule, sumPick, powerBand};
 }
 
-// ---------------------------
-// 렌더: 추천 결과
-// ---------------------------
 function renderSetsSelect(sets){
   out.innerHTML = "";
   sets.forEach((s, i)=>{
@@ -493,7 +463,6 @@ async function copyTextSafe(text){
   try{ await navigator.clipboard.writeText(text); }catch{}
 }
 
-// 숫자합: “룰+PB구간”을 베팅세트로 고정 표시 + 복사 버튼
 function renderSetsSum(sets){
   out.innerHTML = "";
   sets.forEach((s, i)=>{
@@ -512,7 +481,7 @@ function renderSetsSum(sets){
 
     const tagRule = document.createElement("span");
     tagRule.className = "tag rule";
-    tagRule.textContent = `룰: ${SUM_RULE}`;
+    tagRule.textContent = `룰: ${RULE_TITLE[SUM_RULE] || SUM_RULE}`;
 
     const sumLabel = (SUM_RULE==="oddeven")
       ? (SUM_LABEL.oddeven[s.sumPick] || s.sumPick)
@@ -526,7 +495,7 @@ function renderSetsSum(sets){
     copyBtn.className = "btn tiny";
     copyBtn.textContent = "복사";
     copyBtn.addEventListener("click", ()=>{
-      const text = `숫자합게임|룰=${SUM_RULE}|합=${sumLabel}|PB구간=${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
+      const text = `숫자합게임|룰=${RULE_TITLE[SUM_RULE] || SUM_RULE}|합=${sumLabel}|PB구간=${PB_BAND_LABEL[s.powerBand] || s.powerBand}`;
       copyTextSafe(text);
     });
 
@@ -552,14 +521,11 @@ function renderSetsSum(sets){
   });
 }
 
-// ---------------------------
-// 렌더: 핫(빈도/가중)
-// ---------------------------
 function renderHot(){
   if(!FREQ){ return; }
   const win = currentWindow();
   const range = win ? `${win.fromYmd}~${win.toYmd}` : "-";
-  hotMeta.textContent = `game=${GAME}${GAME==="sum" ? `(${SUM_RULE})` : ""} · mode=${MODE} · recent=${range}`;
+  hotMeta.textContent = `game=${GAME}${GAME==="sum" ? `(${RULE_TITLE[SUM_RULE] || SUM_RULE})` : ""} · mode=${MODE} · recent=${range}`;
 
   hotArea.innerHTML = "";
 
@@ -611,21 +577,20 @@ function renderHot(){
     return;
   }
 
-  // GAME === "sum"
   const alpha = alphaForMode();
   const allTotal = FREQ.allTime.totalDraws || 0;
   const allSum = getAllSum();
   const winTotal = win?.totalDraws || 0;
   const wsum = getWinSum();
 
-  const ruleKey = (SUM_RULE === "oddeven") ? "oddEven" : SUM_RULE; // ✅ 매핑
+  const ruleKey = (SUM_RULE === "oddeven") ? "oddEven" : SUM_RULE;
 
   const ss = scoreList(allSum[ruleKey], allTotal, wsum[ruleKey], winTotal, alpha);
   const pb = scoreList(allSum.powerBand, allTotal, wsum.powerBand, winTotal, alpha);
 
   const title1 = document.createElement("div");
   title1.style.fontWeight="900";
-  title1.textContent = `일반볼 합 (${SUM_RULE})`;
+  title1.textContent = `일반볼 합 (${RULE_TITLE[SUM_RULE] || SUM_RULE})`;
   hotArea.appendChild(title1);
 
   const hs = document.createElement("div");
@@ -665,9 +630,6 @@ function renderHot(){
   hotArea.appendChild(hp);
 }
 
-// ---------------------------
-// 히스토리(최근 20)
-// ---------------------------
 const HIST_KEY = "pb_history_v3";
 function loadHist(){ try{ return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }catch{ return []; } }
 function saveHist(arr){ localStorage.setItem(HIST_KEY, JSON.stringify(arr.slice(0,20))); }
@@ -704,14 +666,11 @@ function updateStatusLine(){
   const avoid = isAvoidDup() ? "ON(+37)" : "OFF";
 
   $("statusLine").innerHTML =
-    `game=<b>${GAME}</b>${GAME==="sum" ? ` (rule=<b>${SUM_RULE}</b>)` : ""} · mode=<b>${MODE}</b> (alpha ${alpha})<br/>` +
+    `game=<b>${GAME}</b>${GAME==="sum" ? ` (rule=<b>${RULE_TITLE[SUM_RULE] || SUM_RULE}</b>)` : ""} · mode=<b>${MODE}</b> (alpha ${alpha})<br/>` +
     `recent=<span class="mono">${range}</span> · seed=<span class="mono">${seedStr}</span><br/>` +
     `cycle=<span class="mono">${cycle}</span> · avoidDup=<b>${avoid}</b> · lastRound=<span class="mono">${FREQ.allTime.lastRound}</span>`;
 }
 
-// ---------------------------
-// 데이터 로딩(경로 자동 탐색)
-// ---------------------------
 function buildCandidateUrls(relPath){
   const uniq = new Set();
   uniq.add(new URL(relPath, window.location.href).toString());
@@ -763,9 +722,6 @@ async function loadData(){
   out.innerHTML = `<div class="small">/data/powerball_freq.json 로딩 실패</div>`;
 }
 
-// ---------------------------
-// ✅ 중복 자동 회피 로직 (+37 점프 후 재생성)
-// ---------------------------
 function makeKeySelect(set){ return `select|${MODE}|${set.balls.join(",")}|${set.powerball}`; }
 function makeKeySum(set){ return `sum|${SUM_RULE}|${MODE}|${set.sumPick}|${set.powerBand}`; }
 function collectExistingKeys(){
@@ -773,9 +729,6 @@ function collectExistingKeys(){
   return new Set(hist.map(h=>h.key));
 }
 
-// ---------------------------
-// 추천 실행
-// ---------------------------
 function doRecommend(n){
   if(!FREQ){ return; }
   saveSeed();
@@ -823,14 +776,12 @@ function doRecommend(n){
         break;
       }
 
-      // ✅ 요구사항: 중복이면 cycle +37 점프 후 재시도
       baseCycle += 37;
       setCycle(baseCycle);
       cycleForSet += 37;
     }
   }
 
-  // 기본 동작: 클릭 1번당 cycle 1 증가
   incCycle(1);
 
   if(GAME === "select") renderSetsSelect(sets);
@@ -844,7 +795,7 @@ function doRecommend(n){
       text = `[선택/${MODE}] ${fmtSetSelect(s)}`;
     }else{
       key = makeKeySum(s);
-      text = `[합:${SUM_RULE}/${MODE}] ${fmtSetSum(SUM_RULE, s.sumPick, s.powerBand)}`;
+      text = `[합:${(RULE_TITLE[SUM_RULE] || SUM_RULE)}/${MODE}] ${fmtSetSum(SUM_RULE, s.sumPick, s.powerBand)}`;
     }
     hist.unshift({ key, text });
   }
@@ -854,9 +805,6 @@ function doRecommend(n){
   renderHot();
 }
 
-// ---------------------------
-// 이벤트
-// ---------------------------
 document.addEventListener("click",(e)=>{
   const t = e.target;
 
