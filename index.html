@@ -86,7 +86,6 @@
           ✅ “최근 1/7/30일” 가중 탭 + “시드 입력/공유” + “cycle 점프(+100/+1000)” + <b>숫자선택/숫자합</b> 전부 지원.
         </p>
 
-        <!-- ✅ 상단 활용: 상태/팁/히스토리 -->
         <div class="card" style="margin-top:12px">
           <div style="font-weight:900">📌 현재 상태 / 사용 팁</div>
           <div class="small" id="statusLine" style="margin-top:6px">—</div>
@@ -145,7 +144,6 @@
           <button class="btn warn" id="jump1000">+1000</button>
         </div>
 
-        <!-- ✅ 중복 자동 회피 토글 -->
         <div class="row" style="margin-top:10px;align-items:center;justify-content:space-between">
           <button class="btn toggle" id="avoidDupToggle">중복 자동 회피(+37): OFF</button>
           <div class="small">중복이면 cycle을 +37 점프 후 즉시 재생성</div>
@@ -174,14 +172,12 @@
 
         <div class="sep"></div>
 
-        <!-- ✅ 게임 선택 -->
         <div class="row" style="align-items:center;justify-content:space-between">
           <div class="pillbar">
             <button class="pill on" data-game="select">숫자선택 게임</button>
             <button class="pill" data-game="sum">숫자합 게임</button>
           </div>
 
-          <!-- ✅ 숫자합 룰 선택 -->
           <div class="pillbar" id="sumRuleBar" style="display:none">
             <button class="pill on" data-sumrule="size">대/중/소</button>
             <button class="pill" data-sumrule="band">A~F 구간</button>
@@ -297,30 +293,14 @@ let SUM_RULE = "size";    // "size" | "band" | "oddeven"
 // 숫자합 라벨
 // ---------------------------
 const SUM_LABEL = {
-  size: {
-    S: "소(15~64)",
-    M: "중(65~80)",
-    L: "대(81~130)"
-  },
+  size: { S: "소(15~64)", M: "중(65~80)", L: "대(81~130)" },
   band: {
-    A: "A(15~35)",
-    B: "B(36~49)",
-    C: "C(50~57)",
-    D: "D(58~65)",
-    E: "E(66~78)",
-    F: "F(79~130)"
+    A: "A(15~35)", B: "B(36~49)", C: "C(50~57)",
+    D: "D(58~65)", E: "E(66~78)", F: "F(79~130)"
   },
-  oddeven: {
-    ODD: "홀",
-    EVEN: "짝"
-  }
+  oddeven: { ODD: "홀", EVEN: "짝" }
 };
-const PB_BAND_LABEL = {
-  A: "A(0~2)",
-  B: "B(3~4)",
-  C: "C(5~6)",
-  D: "D(7~9)"
-};
+const PB_BAND_LABEL = { A: "A(0~2)", B: "B(3~4)", C: "C(5~6)", D: "D(7~9)" };
 
 // ---------------------------
 // 로컬 seed/cycle
@@ -343,20 +323,10 @@ function loadLocal(){
   localStorage.setItem("pb_seed", seed);
   localStorage.setItem("pb_cycle", String(cycle));
 }
-function saveSeed(){
-  localStorage.setItem("pb_seed", $("seed").value.trim());
-}
-function setCycle(v){
-  localStorage.setItem("pb_cycle", String(v));
-  $("cycle").value = String(v);
-}
-function incCycle(delta){
-  const cur = Number(localStorage.getItem("pb_cycle") || "0");
-  setCycle(cur + delta);
-}
-function alphaForMode(){
-  return MODE==="1d" ? 0.65 : MODE==="7d" ? 0.45 : 0.25;
-}
+function saveSeed(){ localStorage.setItem("pb_seed", $("seed").value.trim()); }
+function setCycle(v){ localStorage.setItem("pb_cycle", String(v)); $("cycle").value = String(v); }
+function incCycle(delta){ const cur = Number(localStorage.getItem("pb_cycle") || "0"); setCycle(cur + delta); }
+function alphaForMode(){ return MODE==="1d" ? 0.65 : MODE==="7d" ? 0.45 : 0.25; }
 function currentWindow(){
   if(!FREQ) return null;
   if(MODE==="1d") return FREQ.recent?.d1;
@@ -368,9 +338,7 @@ function currentWindow(){
 // ✅ 중복 자동 회피 토글(+37)
 // ---------------------------
 const AVOID_KEY = "pb_avoiddup_v1";
-function isAvoidDup(){
-  return localStorage.getItem(AVOID_KEY) === "1";
-}
+function isAvoidDup(){ return localStorage.getItem(AVOID_KEY) === "1"; }
 function setAvoidDup(v){
   localStorage.setItem(AVOID_KEY, v ? "1" : "0");
   refreshAvoidUI();
@@ -380,29 +348,17 @@ function refreshAvoidUI(){
   const b = $("avoidDupToggle");
   b.textContent = `중복 자동 회피(+37): ${on ? "ON" : "OFF"}`;
   b.classList.toggle("on", on);
-  b.classList.toggle("toggle", true);
+  b.classList.add("toggle");
 }
 
 // ---------------------------
 // FREQ 게터(구버전 호환)
 // ---------------------------
-function getAllSelectNormal(){
-  return (FREQ.allTime?.select?.normal) || FREQ.allTime?.normal || {};
-}
-function getAllSelectPower(){
-  return (FREQ.allTime?.select?.power) || FREQ.allTime?.power || {};
-}
-function getAllSum(){
-  return FREQ.allTime?.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} };
-}
-function getWinSelect(){
-  const w = currentWindow() || {};
-  return w.select || { normal:{}, power:{} };
-}
-function getWinSum(){
-  const w = currentWindow() || {};
-  return w.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} };
-}
+function getAllSelectNormal(){ return (FREQ.allTime?.select?.normal) || FREQ.allTime?.normal || {}; }
+function getAllSelectPower(){ return (FREQ.allTime?.select?.power) || FREQ.allTime?.power || {}; }
+function getAllSum(){ return FREQ.allTime?.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} }; }
+function getWinSelect(){ const w = currentWindow() || {}; return w.select || { normal:{}, power:{} }; }
+function getWinSum(){ const w = currentWindow() || {}; return w.sum || { size:{}, band:{}, oddEven:{}, powerBand:{} }; }
 
 // ---------------------------
 // 추천: 숫자선택
@@ -447,10 +403,12 @@ function recommendSelect(seedStr, cycle, salt){
 }
 
 // ---------------------------
-// 추천: 숫자합 (룰 + 파워볼 구간)
+// ✅ 추천: 숫자합 (룰 + 파워볼 구간)
+// - 핵심 수정: UI 룰 "oddeven" ↔ 데이터키 "oddEven" 매핑
+// - 홀/짝은 클릭 시 체감되게 교대 + PB 구간도 회전
 // ---------------------------
 function recommendSum(seedStr, cycle, salt, rule){
-  const ruleKey = (rule === "oddeven") ? "oddEven" : rule;
+  const ruleKey = (rule === "oddeven") ? "oddEven" : rule;  // ✅ 매핑
 
   const alpha = alphaForMode();
   const win = currentWindow() || {totalDraws:0, sum:{size:{}, band:{}, oddEven:{}, powerBand:{}}};
@@ -463,31 +421,21 @@ function recommendSum(seedStr, cycle, salt, rule){
   const sumScores = scoreList(allSum[ruleKey], allTotal, winSum[ruleKey], winTotal, alpha);
   const pbScores  = scoreList(allSum.powerBand, allTotal, winSum.powerBand, winTotal, alpha);
 
-  // 이하 로직은 그대로
-  ...
-}
+  const sumOrder = sumScores.map(x => x.k); // 예: ["EVEN","ODD"] or A~F / SML
+  const pbOrder  = pbScores.map(x => x.k);  // 예: ["D","C","B","A"]
 
-  // 점수(빈도) 순서 = “결정론 순환 트랙”
-  const sumScores = scoreList(allSum[rule], allTotal, winSum[rule], winTotal, alpha);
-  const pbScores  = scoreList(allSum.powerBand, allTotal, winSum.powerBand, winTotal, alpha);
-
-  const sumOrder = sumScores.map(x => x.k);  // 예: oddeven이면 ["EVEN","ODD"] 이런 식
-  const pbOrder  = pbScores.map(x => x.k);   // 예: ["D","C","B","A"] 등
-
-  // ✅ 무작위 없이: seed+cycle로 만든 nextU64 (결정론)
   const seedKey = `${seedStr}|sum|${rule}|${MODE}|${FREQ.updatedAt}|${FREQ.allTime?.lastRound||0}`;
   const base = fnv1a64(seedKey);
   const next = splitmix64(base ^ (BigInt(cycle)*0x9e3779b97f4a7c15n) ^ BigInt(salt||0));
 
-  // ✅ 홀/짝(rule=oddeven)은 “변화가 체감되게” 강제 교대 + PB구간 회전
+  // ✅ 홀/짝은 “변화가 보이게” 강제 순환(결정론)
   if(rule === "oddeven"){
-    const sumPick = sumOrder[(cycle + salt) % sumOrder.length];              // 홀↔짝 교대
-    const powerBand = pbOrder[((cycle * 3) + salt) % pbOrder.length];        // PB도 같이 회전
+    const sumPick = sumOrder[(cycle + salt) % sumOrder.length];
+    const powerBand = pbOrder[((cycle * 3) + salt) % pbOrder.length];
     return {rule, sumPick, powerBand};
   }
 
-  // ✅ 다른 룰(size/band)은 “빈도 순서”를 유지하면서도 cycle로 천천히 회전
-  // - 70%: 상위권, 25%: 중위권, 5%: 하위권 (결정론: next로 band 선택)
+  // size/band는 “상위권 유지 + cycle로 회전”
   const sumBands = bandSplitGeneric(sumOrder);
   const pbBands  = bandSplitGeneric(pbOrder);
 
@@ -501,7 +449,7 @@ function recommendSum(seedStr, cycle, salt, rule){
 
   return {rule, sumPick, powerBand};
 }
-  
+
 // ---------------------------
 // 렌더: 추천 결과
 // ---------------------------
@@ -545,11 +493,7 @@ async function copyTextSafe(text){
   try{ await navigator.clipboard.writeText(text); }catch{}
 }
 
-/**
- * ✅ 숫자합 게임: “룰 선택 + PB구간”을 한 세트로 고정(베팅 흐름 그대로)
- * - 한 줄에 '베팅 세트' 형태로 표시
- * - 각 세트에 '복사' 버튼 제공
- */
+// 숫자합: “룰+PB구간”을 베팅세트로 고정 표시 + 복사 버튼
 function renderSetsSum(sets){
   out.innerHTML = "";
   sets.forEach((s, i)=>{
@@ -674,7 +618,9 @@ function renderHot(){
   const winTotal = win?.totalDraws || 0;
   const wsum = getWinSum();
 
-  const ss = scoreList(allSum[SUM_RULE], allTotal, wsum[SUM_RULE], winTotal, alpha);
+  const ruleKey = (SUM_RULE === "oddeven") ? "oddEven" : SUM_RULE; // ✅ 매핑
+
+  const ss = scoreList(allSum[ruleKey], allTotal, wsum[ruleKey], winTotal, alpha);
   const pb = scoreList(allSum.powerBand, allTotal, wsum.powerBand, winTotal, alpha);
 
   const title1 = document.createElement("div");
@@ -723,15 +669,9 @@ function renderHot(){
 // 히스토리(최근 20)
 // ---------------------------
 const HIST_KEY = "pb_history_v3";
-function loadHist(){
-  try{ return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }catch{ return []; }
-}
-function saveHist(arr){
-  localStorage.setItem(HIST_KEY, JSON.stringify(arr.slice(0,20)));
-}
-function fmtSetSelect(s){
-  return `${s.balls.join("-")} + PB${s.powerball}`;
-}
+function loadHist(){ try{ return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }catch{ return []; } }
+function saveHist(arr){ localStorage.setItem(HIST_KEY, JSON.stringify(arr.slice(0,20))); }
+function fmtSetSelect(s){ return `${s.balls.join("-")} + PB${s.powerball}`; }
 function fmtSetSum(rule, sumPick, powerBand){
   const sumLabel = (rule==="oddeven")
     ? (SUM_LABEL.oddeven[sumPick] || sumPick)
@@ -825,19 +765,12 @@ async function loadData(){
 
 // ---------------------------
 // ✅ 중복 자동 회피 로직 (+37 점프 후 재생성)
-// - 결정론 유지: 중복이면 cycle을 +37만큼 이동하고 다시 생성
-// - 안전장치: 세트 하나당 최대 30회 시도
 // ---------------------------
-function makeKeySelect(set){
-  return `select|${MODE}|${set.balls.join(",")}|${set.powerball}`;
-}
-function makeKeySum(set){
-  return `sum|${SUM_RULE}|${MODE}|${set.sumPick}|${set.powerBand}`;
-}
+function makeKeySelect(set){ return `select|${MODE}|${set.balls.join(",")}|${set.powerball}`; }
+function makeKeySum(set){ return `sum|${SUM_RULE}|${MODE}|${set.sumPick}|${set.powerBand}`; }
 function collectExistingKeys(){
   const hist = loadHist();
-  const keys = new Set(hist.map(h=>h.key));
-  return keys;
+  return new Set(hist.map(h=>h.key));
 }
 
 // ---------------------------
@@ -848,17 +781,15 @@ function doRecommend(n){
   saveSeed();
   const seedStr = $("seed").value.trim() || deviceSeedDefault();
 
-  // baseCycle은 "현재 저장된 cycle"에서 시작
   let baseCycle = Number(localStorage.getItem("pb_cycle") || "0");
 
   const avoid = isAvoidDup();
-  const existing = collectExistingKeys(); // 과거 히스토리 기준 중복 체크
-  const batchKeys = new Set();            // 이번 클릭 배치 내 중복 체크
+  const existing = collectExistingKeys();
+  const batchKeys = new Set();
 
   const sets = [];
 
   for(let i=0;i<n;i++){
-    // 원래 분산 cycle(소수)
     let cycleForSet = baseCycle + (i*9973);
     let tries = 0;
 
@@ -872,14 +803,12 @@ function doRecommend(n){
 
       const key = (GAME==="select") ? makeKeySelect(set) : makeKeySum(set);
 
-      // 중복 회피 OFF면 바로 채택
       if(!avoid){
         sets.push(set);
         batchKeys.add(key);
         break;
       }
 
-      // 중복이면 cycle +37 점프 후 재시도
       const dup = existing.has(key) || batchKeys.has(key);
       if(!dup){
         sets.push(set);
@@ -889,27 +818,24 @@ function doRecommend(n){
 
       tries++;
       if(tries >= 30){
-        // 안전장치: 너무 많이 겹치면 그냥 넣고 종료(무한루프 방지)
         sets.push(set);
         batchKeys.add(key);
         break;
       }
 
-      // ✅ cycle +37 점프(요구사항)
+      // ✅ 요구사항: 중복이면 cycle +37 점프 후 재시도
       baseCycle += 37;
-      setCycle(baseCycle);                 // 화면/저장 값도 함께 점프(사용자가 체감 가능)
-      cycleForSet += 37;                   // 현재 세트도 같은 폭으로 이동
+      setCycle(baseCycle);
+      cycleForSet += 37;
     }
   }
 
-  // ✅ 클릭 1번당 cycle 1 증가(기본 동작 유지)
+  // 기본 동작: 클릭 1번당 cycle 1 증가
   incCycle(1);
 
-  // ✅ 렌더
   if(GAME === "select") renderSetsSelect(sets);
   else renderSetsSum(sets);
 
-  // ✅ 히스토리 저장(세트 고정 표기)
   const hist = loadHist();
   for(const s of sets){
     let key, text;
@@ -934,7 +860,6 @@ function doRecommend(n){
 document.addEventListener("click",(e)=>{
   const t = e.target;
 
-  // mode 탭
   if(t.classList && t.classList.contains("pill") && t.dataset.mode){
     document.querySelectorAll(".pill[data-mode]").forEach(p=>p.classList.remove("on"));
     t.classList.add("on");
@@ -943,7 +868,6 @@ document.addEventListener("click",(e)=>{
     return;
   }
 
-  // game 탭
   if(t.classList && t.classList.contains("pill") && t.dataset.game){
     document.querySelectorAll(".pill[data-game]").forEach(p=>p.classList.remove("on"));
     t.classList.add("on");
@@ -953,7 +877,6 @@ document.addEventListener("click",(e)=>{
     return;
   }
 
-  // sum rule 탭
   if(t.classList && t.classList.contains("pill") && t.dataset.sumrule){
     document.querySelectorAll(".pill[data-sumrule]").forEach(p=>p.classList.remove("on"));
     t.classList.add("on");
@@ -989,8 +912,6 @@ $("clearHistory").addEventListener("click", ()=>{
 });
 
 loadLocal();
-// 기본값: ON으로 두고 싶으면 아래 한 줄을 주석 해제
-// if(localStorage.getItem(AVOID_KEY) === null) setAvoidDup(true);
 refreshAvoidUI();
 loadData();
 </script>
