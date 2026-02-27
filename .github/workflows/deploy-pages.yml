@@ -1,0 +1,46 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact (site)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      # ✅ 여기서 502/500 같은 서버 에러가 나면 자동 재시도
+      - name: Deploy to GitHub Pages (auto-retry)
+        id: deployment
+        uses: Wandalen/wretry.action@v3.8.0
+        with:
+          action: actions/deploy-pages@v4
+          attempt_limit: 5
+          attempt_delay: 30000
+          with: |
+            token: ${{ github.token }}
+            timeout: 600000
