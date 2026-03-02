@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-03-02T11:22:46.569Z",
+  "updatedAt": "2026-03-02T17:33:35.860Z",
   "source": {
     "url": "https://www.powerballgame.co.kr/"
   },
   "keepDays": 365,
-  "latestYmd": "2026-03-02",
+  "latestYmd": "2026-03-03",
   "draws": [
     {
       "ymd": "2026-02-21",
@@ -42529,6 +42529,1116 @@
       ],
       "powerball": 3,
       "sum": 88,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566684,
+      "todayRound": 245,
+      "balls": [
+        14,
+        12,
+        18,
+        26,
+        4
+      ],
+      "powerball": 0,
+      "sum": 74,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566685,
+      "todayRound": 246,
+      "balls": [
+        10,
+        24,
+        23,
+        3,
+        27
+      ],
+      "powerball": 4,
+      "sum": 87,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566686,
+      "todayRound": 247,
+      "balls": [
+        25,
+        9,
+        27,
+        14,
+        12
+      ],
+      "powerball": 7,
+      "sum": 87,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566687,
+      "todayRound": 248,
+      "balls": [
+        15,
+        27,
+        26,
+        9,
+        11
+      ],
+      "powerball": 0,
+      "sum": 88,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566688,
+      "todayRound": 249,
+      "balls": [
+        1,
+        2,
+        9,
+        23,
+        28
+      ],
+      "powerball": 9,
+      "sum": 63,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566689,
+      "todayRound": 250,
+      "balls": [
+        4,
+        2,
+        15,
+        14,
+        24
+      ],
+      "powerball": 9,
+      "sum": 59,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566690,
+      "todayRound": 251,
+      "balls": [
+        13,
+        11,
+        10,
+        12,
+        27
+      ],
+      "powerball": 9,
+      "sum": 73,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566691,
+      "todayRound": 252,
+      "balls": [
+        7,
+        19,
+        23,
+        20,
+        9
+      ],
+      "powerball": 6,
+      "sum": 78,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566692,
+      "todayRound": 253,
+      "balls": [
+        23,
+        28,
+        27,
+        25,
+        14
+      ],
+      "powerball": 4,
+      "sum": 117,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566693,
+      "todayRound": 254,
+      "balls": [
+        27,
+        8,
+        6,
+        10,
+        18
+      ],
+      "powerball": 7,
+      "sum": 69,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566694,
+      "todayRound": 255,
+      "balls": [
+        20,
+        25,
+        4,
+        14,
+        17
+      ],
+      "powerball": 8,
+      "sum": 80,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566695,
+      "todayRound": 256,
+      "balls": [
+        15,
+        10,
+        1,
+        12,
+        26
+      ],
+      "powerball": 8,
+      "sum": 64,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566696,
+      "todayRound": 257,
+      "balls": [
+        4,
+        17,
+        20,
+        24,
+        26
+      ],
+      "powerball": 2,
+      "sum": 91,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566697,
+      "todayRound": 258,
+      "balls": [
+        21,
+        19,
+        18,
+        25,
+        20
+      ],
+      "powerball": 0,
+      "sum": 103,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566698,
+      "todayRound": 259,
+      "balls": [
+        28,
+        4,
+        9,
+        21,
+        5
+      ],
+      "powerball": 4,
+      "sum": 67,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566699,
+      "todayRound": 260,
+      "balls": [
+        22,
+        25,
+        7,
+        11,
+        14
+      ],
+      "powerball": 5,
+      "sum": 79,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566700,
+      "todayRound": 261,
+      "balls": [
+        24,
+        19,
+        13,
+        26,
+        5
+      ],
+      "powerball": 3,
+      "sum": 87,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566701,
+      "todayRound": 262,
+      "balls": [
+        20,
+        18,
+        6,
+        26,
+        10
+      ],
+      "powerball": 8,
+      "sum": 80,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566702,
+      "todayRound": 263,
+      "balls": [
+        26,
+        1,
+        18,
+        2,
+        25
+      ],
+      "powerball": 8,
+      "sum": 72,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566703,
+      "todayRound": 264,
+      "balls": [
+        17,
+        2,
+        19,
+        4,
+        14
+      ],
+      "powerball": 2,
+      "sum": 56,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566704,
+      "todayRound": 265,
+      "balls": [
+        4,
+        11,
+        18,
+        17,
+        2
+      ],
+      "powerball": 8,
+      "sum": 52,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566705,
+      "todayRound": 266,
+      "balls": [
+        13,
+        6,
+        21,
+        27,
+        4
+      ],
+      "powerball": 9,
+      "sum": 71,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566706,
+      "todayRound": 267,
+      "balls": [
+        28,
+        11,
+        6,
+        12,
+        15
+      ],
+      "powerball": 6,
+      "sum": 72,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566707,
+      "todayRound": 268,
+      "balls": [
+        25,
+        6,
+        26,
+        19,
+        28
+      ],
+      "powerball": 2,
+      "sum": 104,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566708,
+      "todayRound": 269,
+      "balls": [
+        4,
+        1,
+        7,
+        22,
+        9
+      ],
+      "powerball": 2,
+      "sum": 43,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566709,
+      "todayRound": 270,
+      "balls": [
+        9,
+        6,
+        11,
+        26,
+        4
+      ],
+      "powerball": 7,
+      "sum": 56,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566710,
+      "todayRound": 271,
+      "balls": [
+        7,
+        12,
+        22,
+        23,
+        27
+      ],
+      "powerball": 5,
+      "sum": 91,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566711,
+      "todayRound": 272,
+      "balls": [
+        26,
+        11,
+        28,
+        21,
+        15
+      ],
+      "powerball": 4,
+      "sum": 101,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566712,
+      "todayRound": 273,
+      "balls": [
+        25,
+        10,
+        16,
+        11,
+        1
+      ],
+      "powerball": 9,
+      "sum": 63,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566713,
+      "todayRound": 274,
+      "balls": [
+        7,
+        11,
+        26,
+        6,
+        15
+      ],
+      "powerball": 9,
+      "sum": 65,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566714,
+      "todayRound": 275,
+      "balls": [
+        9,
+        19,
+        7,
+        17,
+        27
+      ],
+      "powerball": 2,
+      "sum": 79,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566715,
+      "todayRound": 276,
+      "balls": [
+        21,
+        28,
+        5,
+        12,
+        8
+      ],
+      "powerball": 8,
+      "sum": 74,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566716,
+      "todayRound": 277,
+      "balls": [
+        26,
+        16,
+        10,
+        19,
+        6
+      ],
+      "powerball": 7,
+      "sum": 77,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566717,
+      "todayRound": 278,
+      "balls": [
+        2,
+        10,
+        28,
+        13,
+        14
+      ],
+      "powerball": 3,
+      "sum": 67,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566718,
+      "todayRound": 279,
+      "balls": [
+        5,
+        27,
+        28,
+        4,
+        16
+      ],
+      "powerball": 1,
+      "sum": 80,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566719,
+      "todayRound": 280,
+      "balls": [
+        25,
+        3,
+        8,
+        13,
+        23
+      ],
+      "powerball": 6,
+      "sum": 72,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566720,
+      "todayRound": 281,
+      "balls": [
+        25,
+        6,
+        8,
+        24,
+        10
+      ],
+      "powerball": 8,
+      "sum": 73,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566721,
+      "todayRound": 282,
+      "balls": [
+        2,
+        26,
+        7,
+        4,
+        13
+      ],
+      "powerball": 1,
+      "sum": 52,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566722,
+      "todayRound": 283,
+      "balls": [
+        20,
+        22,
+        9,
+        10,
+        23
+      ],
+      "powerball": 9,
+      "sum": 84,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566723,
+      "todayRound": 284,
+      "balls": [
+        17,
+        23,
+        27,
+        1,
+        26
+      ],
+      "powerball": 9,
+      "sum": 94,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566724,
+      "todayRound": 285,
+      "balls": [
+        6,
+        28,
+        22,
+        3,
+        20
+      ],
+      "powerball": 1,
+      "sum": 79,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566725,
+      "todayRound": 286,
+      "balls": [
+        4,
+        23,
+        10,
+        19,
+        21
+      ],
+      "powerball": 5,
+      "sum": 77,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566726,
+      "todayRound": 287,
+      "balls": [
+        8,
+        5,
+        9,
+        24,
+        10
+      ],
+      "powerball": 6,
+      "sum": 56,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-02",
+      "round": 1566727,
+      "todayRound": 288,
+      "balls": [
+        27,
+        17,
+        6,
+        13,
+        25
+      ],
+      "powerball": 5,
+      "sum": 88,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566728,
+      "todayRound": 1,
+      "balls": [
+        5,
+        21,
+        17,
+        26,
+        6
+      ],
+      "powerball": 7,
+      "sum": 75,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566729,
+      "todayRound": 2,
+      "balls": [
+        16,
+        23,
+        1,
+        21,
+        2
+      ],
+      "powerball": 0,
+      "sum": 63,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566730,
+      "todayRound": 3,
+      "balls": [
+        28,
+        10,
+        4,
+        11,
+        25
+      ],
+      "powerball": 8,
+      "sum": 78,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566731,
+      "todayRound": 4,
+      "balls": [
+        19,
+        24,
+        28,
+        12,
+        14
+      ],
+      "powerball": 3,
+      "sum": 97,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566732,
+      "todayRound": 5,
+      "balls": [
+        13,
+        17,
+        18,
+        9,
+        21
+      ],
+      "powerball": 3,
+      "sum": 78,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566733,
+      "todayRound": 6,
+      "balls": [
+        25,
+        8,
+        2,
+        11,
+        9
+      ],
+      "powerball": 7,
+      "sum": 55,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566734,
+      "todayRound": 7,
+      "balls": [
+        21,
+        9,
+        17,
+        7,
+        8
+      ],
+      "powerball": 4,
+      "sum": 62,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566735,
+      "todayRound": 8,
+      "balls": [
+        24,
+        23,
+        19,
+        27,
+        8
+      ],
+      "powerball": 9,
+      "sum": 101,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566736,
+      "todayRound": 9,
+      "balls": [
+        18,
+        16,
+        27,
+        21,
+        9
+      ],
+      "powerball": 8,
+      "sum": 91,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566737,
+      "todayRound": 10,
+      "balls": [
+        20,
+        11,
+        22,
+        12,
+        24
+      ],
+      "powerball": 3,
+      "sum": 89,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566738,
+      "todayRound": 11,
+      "balls": [
+        18,
+        15,
+        3,
+        14,
+        27
+      ],
+      "powerball": 6,
+      "sum": 77,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566739,
+      "todayRound": 12,
+      "balls": [
+        6,
+        10,
+        3,
+        13,
+        18
+      ],
+      "powerball": 2,
+      "sum": 50,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566740,
+      "todayRound": 13,
+      "balls": [
+        4,
+        12,
+        20,
+        22,
+        27
+      ],
+      "powerball": 2,
+      "sum": 85,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566741,
+      "todayRound": 14,
+      "balls": [
+        4,
+        15,
+        22,
+        24,
+        26
+      ],
+      "powerball": 2,
+      "sum": 91,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566742,
+      "todayRound": 15,
+      "balls": [
+        13,
+        4,
+        10,
+        5,
+        24
+      ],
+      "powerball": 3,
+      "sum": 56,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566743,
+      "todayRound": 16,
+      "balls": [
+        27,
+        25,
+        14,
+        16,
+        6
+      ],
+      "powerball": 4,
+      "sum": 88,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566744,
+      "todayRound": 17,
+      "balls": [
+        11,
+        7,
+        21,
+        8,
+        9
+      ],
+      "powerball": 5,
+      "sum": 56,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566745,
+      "todayRound": 18,
+      "balls": [
+        23,
+        3,
+        13,
+        20,
+        24
+      ],
+      "powerball": 6,
+      "sum": 83,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566746,
+      "todayRound": 19,
+      "balls": [
+        26,
+        20,
+        24,
+        11,
+        25
+      ],
+      "powerball": 0,
+      "sum": 106,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566747,
+      "todayRound": 20,
+      "balls": [
+        17,
+        4,
+        8,
+        16,
+        24
+      ],
+      "powerball": 5,
+      "sum": 69,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566748,
+      "todayRound": 21,
+      "balls": [
+        10,
+        28,
+        16,
+        8,
+        4
+      ],
+      "powerball": 7,
+      "sum": 66,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566749,
+      "todayRound": 22,
+      "balls": [
+        2,
+        16,
+        17,
+        12,
+        21
+      ],
+      "powerball": 3,
+      "sum": 68,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566750,
+      "todayRound": 23,
+      "balls": [
+        28,
+        12,
+        24,
+        18,
+        9
+      ],
+      "powerball": 8,
+      "sum": 91,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566751,
+      "todayRound": 24,
+      "balls": [
+        8,
+        9,
+        22,
+        26,
+        3
+      ],
+      "powerball": 9,
+      "sum": 68,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566752,
+      "todayRound": 25,
+      "balls": [
+        7,
+        16,
+        15,
+        3,
+        12
+      ],
+      "powerball": 7,
+      "sum": 53,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566753,
+      "todayRound": 26,
+      "balls": [
+        20,
+        25,
+        22,
+        3,
+        27
+      ],
+      "powerball": 4,
+      "sum": 97,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566754,
+      "todayRound": 27,
+      "balls": [
+        16,
+        24,
+        5,
+        8,
+        13
+      ],
+      "powerball": 6,
+      "sum": 66,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566755,
+      "todayRound": 28,
+      "balls": [
+        20,
+        15,
+        27,
+        13,
+        6
+      ],
+      "powerball": 3,
+      "sum": 81,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566756,
+      "todayRound": 29,
+      "balls": [
+        24,
+        12,
+        6,
+        21,
+        14
+      ],
+      "powerball": 9,
+      "sum": 77,
+      "_src": "powerballgame.co.kr"
+    },
+    {
+      "ymd": "2026-03-03",
+      "round": 1566757,
+      "todayRound": 30,
+      "balls": [
+        11,
+        20,
+        16,
+        8,
+        25
+      ],
+      "powerball": 5,
+      "sum": 80,
       "_src": "powerballgame.co.kr"
     }
   ]
